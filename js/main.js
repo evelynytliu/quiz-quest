@@ -114,6 +114,10 @@
     showScreen('home');
   });
 
+  // 🏠 exit-to-home buttons shown during the countdown and quiz
+  function goHome() { Sfx.tap(); Game.stop(); renderHome(); showScreen('home'); }
+  document.querySelectorAll('.exit-home').forEach(b => b.addEventListener('click', goHome));
+
   /* ---------- results buttons ---------- */
   document.getElementById('play-again').addEventListener('click', () => { Sfx.tap(); replay(); });
   document.getElementById('back-home').addEventListener('click', () => {
