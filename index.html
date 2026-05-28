@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Miles Quiz Quest!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- ============ HOME ============ -->
+  <section id="screen-home" class="screen active">
+    <div class="home-wrap">
+      <h1 class="logo">🚀 Miles <span>Quiz Quest</span> 🎯</h1>
+      <p class="tagline">Pick a game and beat your high score!</p>
+
+      <div class="name-row">
+        <label for="player-name">Player:</label>
+        <input id="player-name" type="text" maxlength="14" placeholder="Type your name" autocomplete="off" />
+      </div>
+
+      <h2 class="section-title">Choose your challenge</h2>
+      <div id="pack-grid" class="pack-grid"><!-- packs injected here --></div>
+
+      <button id="open-parent" class="parent-btn" title="Grown-ups only">🔒 Grown-ups</button>
+    </div>
+  </section>
+
+  <!-- ============ COUNTDOWN ============ -->
+  <section id="screen-countdown" class="screen">
+    <div class="countdown-wrap">
+      <div id="countdown-pack" class="countdown-pack"></div>
+      <div id="countdown-number" class="countdown-number">3</div>
+    </div>
+  </section>
+
+  <!-- ============ QUESTION ============ -->
+  <section id="screen-quiz" class="screen">
+    <header class="quiz-top">
+      <div class="pill" id="q-progress">1 / 10</div>
+      <div class="timer-wrap">
+        <div id="timer-bar" class="timer-bar"></div>
+        <span id="timer-num" class="timer-num">20</span>
+      </div>
+      <div class="pill score-pill"><span id="q-score">0</span> pts</div>
+    </header>
+
+    <div class="question-area">
+      <div id="q-streak" class="streak-flag hidden">🔥 <span id="streak-count">0</span> streak!</div>
+      <div id="q-emoji" class="q-emoji">❓</div>
+      <h2 id="q-text" class="q-text">Question goes here</h2>
+      <button id="q-speak" class="speak-btn" title="Read it to me">🔊 Read it</button>
+    </div>
+
+    <div id="answer-grid" class="answer-grid"><!-- answers injected --></div>
+
+    <div id="feedback" class="feedback hidden">
+      <div id="feedback-icon" class="feedback-icon">✅</div>
+      <div id="feedback-text" class="feedback-text">Correct!</div>
+      <div id="feedback-points" class="feedback-points">+800</div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="screen-results" class="screen">
+    <div class="results-wrap">
+      <div id="result-stars" class="result-stars">⭐⭐⭐</div>
+      <h1 id="result-title" class="result-title">Awesome!</h1>
+      <p id="result-line" class="result-line">You got 8 / 10 right</p>
+      <div class="result-score-box">
+        <div class="result-score-num" id="result-score">0</div>
+        <div class="result-score-label">points</div>
+      </div>
+      <div id="result-best" class="result-best"></div>
+      <div class="results-buttons">
+        <button id="play-again" class="big-btn green">🔁 Play again</button>
+        <button id="back-home" class="big-btn blue">🏠 Home</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MATH LEVEL PICKER (modal) ============ -->
+  <div id="math-modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" data-close="math-modal">✕</button>
+      <h2>🤖 Math Machine</h2>
+      <p>How tricky do you want it?</p>
+      <div class="level-buttons">
+        <button class="level-btn" data-level="1">🐣 Easy<br><small>small numbers</small></button>
+        <button class="level-btn" data-level="2">🦊 Medium<br><small>3-digit, no carrying</small></button>
+        <button class="level-btn" data-level="3">🐉 Challenge<br><small>carrying &amp; borrowing</small></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PARENT GATE (modal) ============ -->
+  <div id="gate-modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" data-close="gate-modal">✕</button>
+      <h2>🔒 大人專區</h2>
+      <p>請回答以下問題以進入出題後台：</p>
+      <p class="gate-question" id="gate-question">7 × 8 = ?</p>
+      <input id="gate-answer" type="number" inputmode="numeric" placeholder="答案" />
+      <button id="gate-submit" class="big-btn blue">進入</button>
+      <p id="gate-error" class="gate-error hidden">答錯囉，再試一次</p>
+    </div>
+  </div>
+
+  <!-- ============ PARENT EDITOR ============ -->
+  <section id="screen-parent" class="screen parent-screen">
+    <header class="parent-header">
+      <h1>📚 出題後台</h1>
+      <button id="parent-exit" class="big-btn blue small">← 回遊戲</button>
+    </header>
+
+    <div class="parent-body">
+      <aside class="parent-side">
+        <div class="card">
+          <h3>題庫</h3>
+          <div id="pack-manager" class="pack-manager"></div>
+          <button id="add-pack" class="ghost-btn">＋ 新增主題</button>
+        </div>
+
+        <div class="card">
+          <h3>備份 / 還原</h3>
+          <button id="export-btn" class="ghost-btn">⬇️ 匯出題庫 (備份)</button>
+          <label class="ghost-btn file-label">⬆️ 匯入題庫
+            <input id="import-file" type="file" accept="application/json" hidden />
+          </label>
+          <button id="reset-btn" class="ghost-btn danger">♻️ 還原成預設題庫</button>
+          <p class="hint">題庫存在這台裝置的瀏覽器裡。換裝置或清快取前，記得先「匯出」備份。</p>
+        </div>
+      </aside>
+
+      <main class="parent-main">
+        <div class="card">
+          <h3 id="editor-title">新增題目</h3>
+          <form id="question-form" class="q-form">
+            <input type="hidden" id="f-id" />
+
+            <label>主題
+              <select id="f-pack"></select>
+            </label>
+
+            <label>題型
+              <select id="f-type">
+                <option value="mc">選擇題 (2-4 個選項)</option>
+                <option value="tf">是非題 (對 / 錯)</option>
+              </select>
+            </label>
+
+            <label>題目文字 (給 Miles 看的，建議用英文)
+              <textarea id="f-text" rows="2" placeholder="例：What planet do we live on?"></textarea>
+            </label>
+
+            <label>圖示 emoji (選填，會放大顯示)
+              <input id="f-emoji" type="text" maxlength="4" placeholder="例：🪐" />
+            </label>
+
+            <div id="mc-options" class="mc-options">
+              <p class="form-sub">選項 (點圓圈標示正確答案)：</p>
+              <div class="opt-row"><input type="radio" name="correct" value="0" /><input class="f-opt" type="text" placeholder="選項 A" /></div>
+              <div class="opt-row"><input type="radio" name="correct" value="1" /><input class="f-opt" type="text" placeholder="選項 B" /></div>
+              <div class="opt-row"><input type="radio" name="correct" value="2" /><input class="f-opt" type="text" placeholder="選項 C (選填)" /></div>
+              <div class="opt-row"><input type="radio" name="correct" value="3" /><input class="f-opt" type="text" placeholder="選項 D (選填)" /></div>
+            </div>
+
+            <div id="tf-options" class="tf-options hidden">
+              <p class="form-sub">正確答案是？</p>
+              <label class="inline"><input type="radio" name="tfcorrect" value="true" checked /> ✅ True (對)</label>
+              <label class="inline"><input type="radio" name="tfcorrect" value="false" /> ❌ False (錯)</label>
+            </div>
+
+            <div class="form-row">
+              <label>作答秒數
+                <input id="f-time" type="number" min="5" max="60" value="20" />
+              </label>
+              <label>難度
+                <select id="f-level">
+                  <option value="1">🐣 簡單</option>
+                  <option value="2" selected>🦊 中等</option>
+                  <option value="3">🐉 挑戰</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="big-btn green">💾 儲存題目</button>
+              <button type="button" id="form-cancel" class="ghost-btn hidden">取消編輯</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="list-head">
+            <h3>題目清單 <span id="q-count" class="muted"></span></h3>
+            <select id="filter-pack" class="filter-select"></select>
+          </div>
+          <div id="question-list" class="question-list"></div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <script src="js/seed.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/confetti.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
