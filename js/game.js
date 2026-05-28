@@ -14,6 +14,7 @@ window.Game = (function () {
   let qStart = 0;
   let locked = false;
   let countdownTimer = null;
+  let advanceTimer = null;
 
   // DOM
   const el = {
@@ -33,6 +34,7 @@ window.Game = (function () {
     fbIcon: document.getElementById('feedback-icon'),
     fbText: document.getElementById('feedback-text'),
     fbPoints: document.getElementById('feedback-points'),
+    fbNext: document.getElementById('feedback-next'),
     rStars: document.getElementById('result-stars'),
     rTitle: document.getElementById('result-title'),
     rLine: document.getElementById('result-line'),
@@ -44,6 +46,8 @@ window.Game = (function () {
     const q = queue[idx];
     if (q) { Sfx.tap(); Sfx.speakList(q.speak || q.text, q.options); }
   });
+
+  el.fbNext.addEventListener('click', () => { Sfx.tap(); clearTimeout(advanceTimer); next(); });
 
   function start(pId, questions) {
     packId = pId;
@@ -201,7 +205,7 @@ window.Game = (function () {
     }
 
     el.score.textContent = score;
-    showFeedback(right, gained);
+    showFeedback(right, gained, q.options[q.correct]);
   }
 
   function timeUp() {
@@ -214,28 +218,35 @@ window.Game = (function () {
     });
     streak = 0;
     Sfx.wrong();
-    showFeedback(null, 0);
+    showFeedback(null, 0, q.options[q.correct]);
   }
 
   const PRAISE = ['Correct!', 'Yes! 🎉', 'Awesome!', 'You got it!', 'Super!', 'Nice one!'];
   const TRYAGAIN = ['Good try!', 'Almost!', 'Keep going!', 'Nice try!'];
 
-  function showFeedback(right, gained) {
+  function showFeedback(right, gained, correctText) {
+    clearTimeout(advanceTimer);
     el.feedback.classList.remove('hidden');
+    el.feedback.classList.toggle('correct', right === true);
+    el.feedback.classList.toggle('wrong', right !== true);
+
     if (right === true) {
       el.fbIcon.textContent = ['🎉', '🌟', '🚀', '💪', '🏆'][Math.floor(Math.random() * 5)];
       el.fbText.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
       el.fbPoints.textContent = '+' + gained + (streak >= 2 ? '   🔥' + streak : '');
-    } else if (right === false) {
-      el.fbIcon.textContent = '🙈';
-      el.fbText.textContent = TRYAGAIN[Math.floor(Math.random() * TRYAGAIN.length)];
-      el.fbPoints.textContent = 'The right answer is shown above';
+      el.fbNext.textContent = 'Next ▶';
+      // got it right — keep the pace, but Next can skip ahead
+      advanceTimer = setTimeout(next, 1700);
     } else {
-      el.fbIcon.textContent = '⏰';
-      el.fbText.textContent = "Time's up!";
-      el.fbPoints.textContent = 'The right answer is shown above';
+      el.fbIcon.textContent = right === false ? '🙈' : '⏰';
+      el.fbText.textContent = right === false
+        ? TRYAGAIN[Math.floor(Math.random() * TRYAGAIN.length)]
+        : "Time's up!";
+      el.fbPoints.innerHTML = 'The answer is: <span class="ans">' + escapeHtml(correctText) + '</span>';
+      el.fbNext.textContent = 'Got it ▶';
+      // wrong / timed out — wait for Miles to look, read the answer aloud
+      setTimeout(() => Sfx.speak('The answer is ' + correctText), 450);
     }
-    setTimeout(next, right ? 1500 : 2100);
   }
 
   function next() {

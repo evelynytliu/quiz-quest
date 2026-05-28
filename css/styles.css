@@ -227,13 +227,30 @@ body{
 @keyframes rightPulse{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 
+/* compact banner pinned to the top — leaves the answer grid (with the
+   correct answer highlighted) visible so mistakes can be reviewed */
 .feedback{
-  position:fixed;inset:0;background:rgba(24,28,22,.90);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;z-index:50;color:var(--paper);
+  position:fixed;left:50%;top:64px;transform:translateX(-50%);
+  width:min(620px,94vw);background:var(--card);border-radius:18px;
+  box-shadow:var(--shadow);z-index:50;color:var(--ink);
+  display:flex;align-items:center;gap:16px;padding:16px 20px;
+  border:1px solid rgba(0,0,0,.05);animation:dropIn .28s ease;
 }
-.feedback-icon{font-size:5.6rem;animation:pop .4s ease}
-.feedback-text{font-family:var(--font-head);font-weight:600;font-size:2.3rem;margin-top:10px}
-.feedback-points{font-size:1.6rem;color:var(--gold);font-weight:800;margin-top:8px}
+.feedback.correct{box-shadow:0 0 0 3px var(--c-green) inset, var(--shadow)}
+.feedback.wrong{box-shadow:0 0 0 3px var(--c-red) inset, var(--shadow)}
+@keyframes dropIn{0%{opacity:0;transform:translate(-50%,-16px)}100%{opacity:1;transform:translate(-50%,0)}}
+.feedback-icon{font-size:3rem;flex:0 0 auto;animation:pop .4s ease}
+.feedback-main{flex:1;text-align:left;min-width:0}
+.feedback-text{font-family:var(--font-head);font-weight:600;font-size:1.5rem;line-height:1.1}
+.feedback-points{font-size:1.05rem;color:var(--ink-soft);font-weight:800;margin-top:3px}
+.feedback-points .ans{color:var(--c-green)}
+.feedback-next{
+  flex:0 0 auto;border:none;border-radius:12px;cursor:pointer;background:var(--c-blue);
+  color:var(--paper);font-family:var(--font-body);font-weight:800;font-size:1.05rem;
+  padding:12px 20px;box-shadow:var(--shadow-sm);transition:filter .12s,transform .1s;
+}
+.feedback-next:hover{filter:brightness(1.07)}
+.feedback-next:active{transform:translateY(2px)}
 
 /* ---------- RESULTS ---------- */
 #screen-results{display:none}
