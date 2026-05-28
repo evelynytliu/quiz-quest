@@ -4,7 +4,7 @@ window.Confetti = (function () {
   const ctx = canvas.getContext('2d');
   let pieces = [];
   let raf = null;
-  const COLORS = ['#e8412b', '#1368ce', '#ffd400', '#26890c', '#6a3fb5', '#ff7a00', '#ff5fa2'];
+  const COLORS = ['#a85a4d', '#4e6b7a', '#9c7838', '#5f7850', '#c2a25a', '#b5703f', '#7a8b6a'];
 
   function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
   window.addEventListener('resize', resize);
