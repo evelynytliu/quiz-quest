@@ -156,6 +156,8 @@ window.Store = (function () {
       type: 'mc',
       emoji: '🧮',
       text: `${a} ${op} ${b} = ?`,
+      speak: `${a} ${op === '+' ? 'plus' : 'minus'} ${b}. What is the answer?`,
+      math: { a, b, op },
       options,
       correct,
       time: level === 3 ? 25 : 20,

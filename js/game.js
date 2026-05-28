@@ -42,7 +42,7 @@ window.Game = (function () {
 
   el.speakBtn.addEventListener('click', () => {
     const q = queue[idx];
-    if (q) { Sfx.tap(); Sfx.speak(q.text); }
+    if (q) { Sfx.tap(); Sfx.speakList(q.speak || q.text, q.options); }
   });
 
   function start(pId, questions) {
@@ -82,31 +82,68 @@ window.Game = (function () {
     showScreen('quiz');
     el.progress.textContent = (idx + 1) + ' / ' + queue.length;
     el.score.textContent = score;
-    el.qEmoji.textContent = q.emoji || '❓';
-    el.qText.textContent = q.text;
     el.feedback.classList.add('hidden');
+
+    // ----- question visual -----
+    const isCJK = q.emoji && /[㐀-鿿぀-ヿ가-힯]/.test(q.emoji);
+    el.qEmoji.className = 'q-emoji' + (isCJK ? ' cjk-char' : '');
+    if (q.math) {
+      el.qEmoji.textContent = ['🚀', '🌟', '🧠', '🤖', '🎯', '🦖', '🍩', '⚡'][Math.floor(Math.random() * 8)];
+      el.qText.innerHTML = renderMath(q.math, q.level);
+    } else {
+      el.qEmoji.textContent = q.emoji || '❓';
+      el.qText.textContent = q.text;
+    }
 
     // streak flag
     if (streak >= 2) { el.streakFlag.classList.remove('hidden'); el.streakCount.textContent = streak; }
     else { el.streakFlag.classList.add('hidden'); }
 
-    // answers
+    // ----- answers (each with a 🔊 chip so Miles can hear that one option) -----
     el.answers.innerHTML = '';
-    const isTF = q.type === 'tf';
-    el.answers.classList.toggle('single', false);
     q.options.forEach((opt, i) => {
       const btn = document.createElement('button');
       btn.className = 'answer-btn a' + i;
-      btn.innerHTML = '<span class="shape">' + SHAPES[i] + '</span><span class="label">' + escapeHtml(opt) + '</span>';
+      btn.innerHTML = '<span class="shape">' + SHAPES[i] + '</span>'
+        + '<span class="label">' + escapeHtml(opt) + '</span>'
+        + '<span class="opt-speak" title="Hear it">🔊</span>';
       btn.addEventListener('click', () => answer(i, btn));
+      btn.querySelector('.opt-speak').addEventListener('click', e => {
+        e.stopPropagation();
+        if (!locked) { Sfx.stopSpeak(); Sfx.speak(String(opt)); }
+      });
       el.answers.appendChild(btn);
     });
 
-    // auto read the question aloud for early readers
-    setTimeout(() => Sfx.speak(q.text), 250);
+    // auto-read the question AND every option aloud (Miles decodes by sound)
+    setTimeout(() => Sfx.speakList(q.speak || q.text, q.options), 300);
 
     startTimer(q.time || 20);
     qStart = Date.now();
+  }
+
+  const MATH_OBJ = ['🍎', '🍪', '⭐', '🚀', '🏀', '🐢', '🎈', '⚽', '🦖', '🍓', '🐠', '🧁'];
+  function renderMath(m, level) {
+    const eq = '<div class="m-eq">'
+      + '<span class="m-tile">' + m.a + '</span>'
+      + '<span class="m-opb">' + m.op + '</span>'
+      + '<span class="m-tile t2">' + m.b + '</span>'
+      + '<span class="m-eqs">=</span>'
+      + '<span class="m-qm">?</span></div>';
+    if (level === 1) {
+      const e = MATH_OBJ[Math.floor(Math.random() * MATH_OBJ.length)];
+      if (m.op === '+') {
+        return '<div class="m-objects">' + group(m.a, e) + '<span class="m-op2">＋</span>' + group(m.b, e) + '</div>' + eq;
+      }
+      return '<div class="m-objects">' + group(m.a, e, m.a - m.b) + '</div>'
+        + '<div class="m-take">take away ' + m.b + '</div>' + eq;
+    }
+    return eq;
+  }
+  function group(n, e, fadeFrom) {
+    let s = '<span class="m-grp">';
+    for (let i = 0; i < n; i++) s += '<span class="ob' + (fadeFrom != null && i >= fadeFrom ? ' gone' : '') + '">' + e + '</span>';
+    return s + '</span>';
   }
 
   function startTimer(seconds) {

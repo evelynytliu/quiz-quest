@@ -58,18 +58,34 @@ window.Sfx = (function () {
     speechSynthesis.onvoiceschanged = pickVoice;
   }
 
+  function utter(text, rate) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = rate || 0.85; u.pitch = 1.12; u.volume = 1;
+    if (voice) u.voice = voice;
+    return u;
+  }
+
   function speak(text) {
     if (!('speechSynthesis' in window) || muted) return;
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.92; u.pitch = 1.1; u.volume = 1;
-    if (voice) u.voice = voice;
-    speechSynthesis.speak(u);
+    speechSynthesis.speak(utter(text));
   }
+
+  // Read the question, then each answer option in order (with a tiny lead-in).
+  function speakList(question, options) {
+    if (!('speechSynthesis' in window) || muted) return;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter(question, 0.82));
+    if (options && options.length) {
+      speechSynthesis.speak(utter('Is it ...', 0.85));
+      options.forEach(o => speechSynthesis.speak(utter(String(o), 0.85)));
+    }
+  }
+
   function stopSpeak() { if ('speechSynthesis' in window) speechSynthesis.cancel(); }
 
   function resume() { const c = ac(); if (c && c.state === 'suspended') c.resume(); }
   function setMuted(m) { muted = m; if (m) stopSpeak(); }
 
-  return { correct, wrong, tick, beep, go, fanfare, tap, speak, stopSpeak, resume, setMuted };
+  return { correct, wrong, tick, beep, go, fanfare, tap, speak, speakList, stopSpeak, resume, setMuted };
 })();

@@ -122,6 +122,33 @@ body{
   font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',
     'Fredoka','Baloo 2',sans-serif;
 }
+/* big Chinese character tile */
+.q-emoji.cjk-char{
+  font-size:clamp(6rem,22vw,9.5rem);line-height:1;color:#fff;margin:2px auto 10px;
+  width:clamp(120px,40vw,200px);height:clamp(120px,40vw,200px);
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#e8412b,#ff7a00);border-radius:26px;
+  box-shadow:0 8px 0 rgba(0,0,0,.18);
+}
+
+/* ----- lively math layout ----- */
+.m-objects{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;margin:4px 0 14px}
+.m-grp{display:inline-flex;flex-wrap:wrap;gap:4px;justify-content:center;
+  background:#f3effe;border-radius:16px;padding:10px 12px;max-width:46%}
+.m-grp .ob{font-size:2rem;line-height:1.1;transition:opacity .2s}
+.m-grp .ob.gone{opacity:.22;filter:grayscale(1)}
+.m-op2{font-size:2.4rem;font-weight:700;color:var(--c-purple)}
+.m-take{font-size:1.1rem;font-weight:700;color:var(--c-red);margin:-6px 0 12px}
+.m-eq{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.m-tile{
+  display:inline-flex;align-items:center;justify-content:center;min-width:clamp(54px,12vw,86px);
+  padding:8px 14px;border-radius:16px;background:var(--c-blue);color:#fff;font-weight:700;
+  font-size:clamp(2rem,7vw,3.2rem);box-shadow:0 5px 0 rgba(0,0,0,.18);
+}
+.m-tile.t2{background:var(--c-green)}
+.m-opb,.m-eqs{font-size:clamp(2rem,7vw,3rem);font-weight:700;color:var(--c-purple)}
+.m-qm{font-size:clamp(2.4rem,8vw,3.6rem);font-weight:700;color:var(--c-yellow);
+  -webkit-text-stroke:2px #c98b00}
 .q-text{font-size:clamp(1.4rem,4.2vw,2.3rem);color:var(--ink);line-height:1.25}
 .speak-btn{
   margin-top:12px;background:var(--c-purple);color:#fff;border:none;border-radius:999px;
@@ -144,6 +171,14 @@ body{
 }
 .answer-btn:active{transform:translateY(4px)}
 .answer-btn .shape{font-size:1.6rem;flex:0 0 auto}
+.answer-btn .label{flex:1}
+.opt-speak{
+  flex:0 0 auto;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.28);
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:pointer;
+  transition:background .12s, transform .08s;
+}
+.opt-speak:hover{background:rgba(255,255,255,.45)}
+.opt-speak:active{transform:scale(.9)}
 .answer-btn.a0{background:var(--c-red)}
 .answer-btn.a1{background:var(--c-blue)}
 .answer-btn.a2{background:var(--c-yellow)}
