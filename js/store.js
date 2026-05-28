@@ -108,6 +108,16 @@ window.Store = (function () {
 
   function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
+  // Return a play-copy of a question with its multiple-choice options shuffled,
+  // so the correct answer isn't always in the same position. True/False keep
+  // their natural order. Never mutates the stored question.
+  function shuffleOptions(q) {
+    if (q.type === 'tf') return q;
+    const correctText = q.options[q.correct];
+    const opts = shuffle(q.options.slice());
+    return Object.assign({}, q, { options: opts, correct: opts.indexOf(correctText) });
+  }
+
   function makeMathQuestion(level) {
     let a, b, op, answer;
     if (level === 1) {
@@ -200,7 +210,7 @@ window.Store = (function () {
     load, save, getPacks, getPack, questionsFor, allQuestions, countFor,
     upsertQuestion, deleteQuestion, addPack, deletePack,
     exportJSON, importJSON, resetDefaults,
-    generateMath, shuffle,
+    generateMath, shuffle, shuffleOptions,
     getBest, setBest, getName, setName, uid
   };
 })();

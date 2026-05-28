@@ -46,7 +46,7 @@
     if (pack.generated) { openMathModal(packId); return; }
     let qs = Store.questionsFor(packId).slice();
     if (!qs.length) return;
-    qs = Store.shuffle(qs).slice(0, ROUND_SIZE);
+    qs = Store.shuffle(qs).slice(0, ROUND_SIZE).map(Store.shuffleOptions);
     Game.stop();
     Game.start(packId, qs);
   }
