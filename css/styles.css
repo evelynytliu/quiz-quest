@@ -221,6 +221,16 @@ body{
 .answer-btn.a1{background:var(--c-blue)}
 .answer-btn.a2{background:var(--c-yellow)}
 .answer-btn.a3{background:var(--c-green)}
+
+/* big O / X buttons for True / False questions */
+.tf-btn{
+  flex-direction:column;justify-content:center;align-items:center;gap:4px;
+  text-align:center;min-height:clamp(150px,30vh,220px);padding:18px;
+}
+.tf-btn .tf-sym{font-size:clamp(4rem,15vw,6.5rem);line-height:.95;font-weight:700}
+.tf-btn .tf-label{font-size:1.05rem;font-weight:800;letter-spacing:1px;opacity:.85;text-transform:uppercase}
+.tf-o{background:var(--c-green)}
+.tf-x{background:var(--c-red)}
 .answer-btn.dimmed{opacity:.32;filter:grayscale(.6)}
 .answer-btn.right{outline:4px solid var(--gold);outline-offset:2px;animation:rightPulse .5s ease}
 .answer-btn.wrong{outline:4px solid #e7dcc6;outline-offset:2px;animation:shake .4s ease}

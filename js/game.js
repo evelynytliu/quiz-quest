@@ -103,21 +103,40 @@ window.Game = (function () {
     if (streak >= 2) { el.streakFlag.classList.remove('hidden'); el.streakCount.textContent = streak; }
     else { el.streakFlag.classList.add('hidden'); }
 
-    // ----- answers (each with a 🔊 chip so Miles can hear that one option) -----
+    // ----- answers -----
     el.answers.innerHTML = '';
-    q.options.forEach((opt, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'answer-btn a' + i;
-      btn.innerHTML = '<span class="shape">' + SHAPES[i] + '</span>'
-        + '<span class="label">' + escapeHtml(opt) + '</span>'
-        + '<span class="opt-speak" title="Hear it">🔊</span>';
-      btn.addEventListener('click', () => answer(i, btn));
-      btn.querySelector('.opt-speak').addEventListener('click', e => {
-        e.stopPropagation();
-        if (!locked) { Sfx.stopSpeak(); Sfx.speak(String(opt)); }
+    if (q.type === 'tf') {
+      // big O (True) / X (False) buttons
+      el.answers.className = 'answer-grid tf-grid';
+      const defs = [
+        { cls: 'tf-o', sym: '◯', label: q.options[0] || 'True' },
+        { cls: 'tf-x', sym: '✕', label: q.options[1] || 'False' }
+      ];
+      defs.forEach((d, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn tf-btn ' + d.cls;
+        btn.innerHTML = '<span class="tf-sym">' + d.sym + '</span>'
+          + '<span class="tf-label">' + escapeHtml(d.label) + '</span>';
+        btn.addEventListener('click', () => answer(i, btn));
+        el.answers.appendChild(btn);
       });
-      el.answers.appendChild(btn);
-    });
+    } else {
+      // multiple choice — each with a 🔊 chip so Miles can hear that one option
+      el.answers.className = 'answer-grid';
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn a' + i;
+        btn.innerHTML = '<span class="shape">' + SHAPES[i] + '</span>'
+          + '<span class="label">' + escapeHtml(opt) + '</span>'
+          + '<span class="opt-speak" title="Hear it">🔊</span>';
+        btn.addEventListener('click', () => answer(i, btn));
+        btn.querySelector('.opt-speak').addEventListener('click', e => {
+          e.stopPropagation();
+          if (!locked) { Sfx.stopSpeak(); Sfx.speak(String(opt)); }
+        });
+        el.answers.appendChild(btn);
+      });
+    }
 
     // auto-read the question AND every option aloud (Miles decodes by sound)
     setTimeout(() => Sfx.speakList(q.speak || q.text, q.options), 300);
