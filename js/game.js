@@ -29,6 +29,8 @@ window.Game = (function () {
     qEmoji: document.getElementById('q-emoji'),
     qText: document.getElementById('q-text'),
     speakBtn: document.getElementById('q-speak'),
+    listenBtn: document.getElementById('q-listen'),
+    listenStatus: document.getElementById('q-listen-status'),
     answers: document.getElementById('answer-grid'),
     feedback: document.getElementById('feedback'),
     fbIcon: document.getElementById('feedback-icon'),
@@ -46,6 +48,130 @@ window.Game = (function () {
     const q = queue[idx];
     if (q) { Sfx.tap(); clearSpeaking(); Sfx.speakList(q.speak || q.text, q.options, setSpeaking); }
   });
+
+  /* ---------- voice answering ---------- */
+  let listenToken = 0;   // bumped to invalidate stale recognition callbacks
+
+  function setListenState(state, msg) {
+    // state: 'idle' | 'listening'
+    if (!el.listenBtn) return;
+    el.listenBtn.classList.toggle('listening', state === 'listening');
+    el.listenBtn.textContent = state === 'listening' ? '🎤 Listening…' : '🎤 Say your answer';
+    if (el.listenStatus) el.listenStatus.textContent = msg || '';
+  }
+
+  function cancelListening() {
+    listenToken++;        // any in-flight session's callbacks become no-ops
+    Voice.stop();
+    if (el.listenBtn) el.listenBtn.classList.remove('listening');
+  }
+
+  function startListening() {
+    if (locked || !Voice.supported()) return;
+    const q = queue[idx];
+    if (!q) return;
+    Sfx.stopSpeak();
+    clearSpeaking();
+    const my = ++listenToken;
+    Voice.start({
+      onStart: () => { if (my !== listenToken) return; setListenState('listening', 'Listening… say your answer!'); },
+      onResult: (alts) => {
+        if (my !== listenToken || locked) return;
+        const i = spokenToIndex(alts, q.options);
+        if (i >= 0) {
+          listenToken++;                        // we handled it; mute later callbacks
+          setListenState('idle', '');
+          setSpeaking(i, true);                 // briefly show what was picked
+          Voice.stop();
+          setTimeout(() => { if (locked) return; setSpeaking(i, false); answer(i, el.answers.children[i]); }, 350);
+        }
+      },
+      onError: (code) => {
+        if (my !== listenToken) return;
+        if (code === 'not-allowed' || code === 'service-not-allowed') {
+          listenToken++;                        // handled — don't also nag from onEnd
+          setListenState('idle', '🎤 Microphone is off — allow it in Settings, or just tap.');
+        } else if (code === 'network') {
+          listenToken++;
+          setListenState('idle', '🌐 Need internet for voice — tap your answer instead.');
+        }
+        // other codes (no-speech, aborted) fall through to onEnd
+      },
+      onEnd: () => {
+        if (my !== listenToken) return;         // handled or superseded
+        setListenState('idle', "Didn't catch that — try again, or tap your answer.");
+        Sfx.speak("I didn't catch that. Try again, or tap your answer.");
+      }
+    });
+  }
+
+  if (el.listenBtn) el.listenBtn.addEventListener('click', () => { Sfx.tap(); startListening(); });
+
+  // ----- match spoken words to one of the on-screen options -----
+  const NUMWORDS = { zero:'0', one:'1', two:'2', three:'3', four:'4', five:'5', six:'6',
+    seven:'7', eight:'8', nine:'9', ten:'10', eleven:'11', twelve:'12', thirteen:'13',
+    fourteen:'14', fifteen:'15', sixteen:'16', seventeen:'17', eighteen:'18',
+    nineteen:'19', twenty:'20' };
+  const TRUE_WORDS = ['true', 'yes', 'right', 'correct', 'yeah', 'yep', 'yup'];
+  const FALSE_WORDS = ['false', 'no', 'wrong', 'nope', 'nah'];
+
+  function normalize(s) {
+    return String(s).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function toDigits(s) { return s.split(' ').map(w => NUMWORDS[w] || w).join(' '); }
+  function lev(a, b) {
+    const m = a.length, n = b.length;
+    if (!m) return n; if (!n) return m;
+    const d = Array.from({ length: m + 1 }, (_, i) => [i].concat(new Array(n).fill(0)));
+    for (let j = 0; j <= n; j++) d[0][j] = j;
+    for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    return d[m][n];
+  }
+
+  function spokenToIndex(alts, options) {
+    const opts = options.map(o => toDigits(normalize(o)));
+    let best = -1, bestScore = 0;
+
+    for (const raw of alts || []) {
+      const t = toDigits(normalize(raw));
+      if (!t) continue;
+      const tokens = t.split(' ');
+
+      // True / False questions: accept friendly synonyms
+      if (options.length === 2 && (opts[0] === 'true' || opts[1] === 'false')) {
+        const ti = opts[0] === 'true' ? 0 : 1;
+        const fi = opts[1] === 'false' ? 1 : 0;
+        for (const tok of tokens) {
+          if (TRUE_WORDS.indexOf(tok) >= 0) return ti;
+          if (FALSE_WORDS.indexOf(tok) >= 0) return fi;
+        }
+      }
+
+      for (let i = 0; i < opts.length; i++) {
+        const o = opts[i];
+        let score = 0;
+        if (t === o) score = 100;
+        else if (tokens.indexOf(o) >= 0) score = 92;            // option is one spoken word
+        else if (o.length >= 3 && t.indexOf(o) >= 0) score = 82; // option phrase inside speech
+        else if (t.length >= 3 && o.indexOf(t) >= 0) score = 72;
+        else if (o.indexOf(' ') < 0) {                           // single-word option: fuzzy
+          for (const tok of tokens) {
+            if (tok === o) { score = Math.max(score, 92); }
+            else if (o.length >= 4 && lev(tok, o) <= 1) { score = Math.max(score, 76); }
+          }
+        } else {                                                 // multi-word option: token overlap
+          const oset = o.split(' ');
+          let shared = 0;
+          tokens.forEach(tok => { if (oset.indexOf(tok) >= 0) shared++; });
+          if (shared) score = 45 + shared * 16;
+        }
+        if (score > bestScore) { bestScore = score; best = i; }
+      }
+    }
+    return bestScore >= 72 ? best : -1;   // need a fairly confident match
+  }
 
   el.fbNext.addEventListener('click', () => { Sfx.tap(); clearTimeout(advanceTimer); next(); });
 
@@ -149,7 +275,15 @@ window.Game = (function () {
       });
     }
 
-    // auto-read the question AND every option aloud (Miles decodes by sound)
+    // voice answering: offer the mic only when the browser supports it
+    cancelListening();
+    if (el.listenBtn) {
+      if (Voice.supported()) { el.listenBtn.classList.remove('hidden'); el.listenBtn.disabled = false; }
+      else { el.listenBtn.classList.add('hidden'); }
+    }
+    setListenState('idle', '');
+
+    // auto-read the question AND every option aloud (kids decode by sound)
     setTimeout(() => Sfx.speakList(q.speak || q.text, q.options, setSpeaking), 300);
 
     startTimer(q.time || 20);
@@ -205,6 +339,9 @@ window.Game = (function () {
     locked = true;
     clearInterval(timer);
     Sfx.stopSpeak();
+    cancelListening();
+    if (el.listenBtn) el.listenBtn.disabled = true;
+    setListenState('idle', '');
     const q = queue[idx];
     const right = choice === q.correct;
     const used = (Date.now() - qStart) / 1000;
@@ -242,6 +379,9 @@ window.Game = (function () {
   function timeUp() {
     locked = true;
     Sfx.stopSpeak();
+    cancelListening();
+    if (el.listenBtn) el.listenBtn.disabled = true;
+    setListenState('idle', '');
     const q = queue[idx];
     [...el.answers.children].forEach((b, i) => {
       b.style.pointerEvents = 'none';
@@ -316,7 +456,7 @@ window.Game = (function () {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  function stop() { clearInterval(timer); clearInterval(countdownTimer); Sfx.stopSpeak(); }
+  function stop() { clearInterval(timer); clearInterval(countdownTimer); Sfx.stopSpeak(); cancelListening(); }
 
   function currentPack() { return packId; }
 

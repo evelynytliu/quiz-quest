@@ -56,7 +56,11 @@
       <div id="q-streak" class="streak-flag hidden">🔥 <span id="streak-count">0</span> streak!</div>
       <div id="q-emoji" class="q-emoji">❓</div>
       <h2 id="q-text" class="q-text">Question goes here</h2>
-      <button id="q-speak" class="speak-btn" title="Read it to me">🔊 Hear it again</button>
+      <div class="q-actions">
+        <button id="q-speak" class="speak-btn" title="Read it to me">🔊 Hear it again</button>
+        <button id="q-listen" class="listen-btn hidden" type="button" title="Say your answer">🎤 Say your answer</button>
+      </div>
+      <div id="q-listen-status" class="listen-status" aria-live="polite"></div>
     </div>
 
     <div id="answer-grid" class="answer-grid"><!-- answers injected --></div>
@@ -215,6 +219,7 @@
   <script src="js/seed.js"></script>
   <script src="js/store.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/voice.js"></script>
   <script src="js/confetti.js"></script>
   <script src="js/game.js"></script>
   <script src="js/editor.js"></script>
