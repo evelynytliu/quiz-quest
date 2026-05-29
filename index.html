@@ -19,8 +19,9 @@
       <p class="tagline">Pick a game and beat your high score</p>
 
       <div class="name-row">
-        <label for="player-name">Player:</label>
-        <input id="player-name" type="text" maxlength="14" placeholder="Type your name" autocomplete="off" />
+        <span class="name-label">Player:</span>
+        <div id="player-list" class="player-chips"><!-- player chips injected --></div>
+        <button id="add-player" class="add-player" type="button" title="Add a player" aria-label="Add a player">＋</button>
       </div>
 
       <h2 class="section-title">Choose your challenge</h2>
