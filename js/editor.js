@@ -66,7 +66,7 @@ window.Editor = (function () {
   }
 
   function onAddPack() {
-    const name = prompt('新主題名稱 (給 Miles 看的，建議英文)：');
+    const name = prompt('新主題名稱 (給小朋友看的，建議英文)：');
     if (!name) return;
     const emoji = prompt('這個主題的 emoji 圖示 (例如 🐊)：', '⭐') || '⭐';
     Store.addPack(name.trim(), emoji.trim());
@@ -200,7 +200,7 @@ window.Editor = (function () {
     const a = document.createElement('a');
     const d = new Date();
     a.href = url;
-    a.download = `miles-quiz-backup-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.json`;
+    a.download = `quiz-quest-backup-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.json`;
     a.click();
     URL.revokeObjectURL(url);
     flash('⬇️ 已匯出備份檔');
