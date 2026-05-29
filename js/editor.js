@@ -141,6 +141,7 @@ window.Editor = (function () {
   function editQuestion(id) {
     const q = Store.allQuestions().find(x => x.id === id);
     if (!q) return;
+    if (q.type === 'zh') { alert('聽力題（中文發音）目前不支援在這裡編輯，可以直接刪除。'); return; }
     els.fId.value = q.id;
     els.fPack.value = q.packId;
     els.fType.value = q.type;
@@ -178,7 +179,7 @@ window.Editor = (function () {
         <span class="qi-emoji">${q.emoji || '❓'}</span>
         <div class="qi-body">
           <div class="qi-text">${escapeHtml(q.text)}</div>
-          <div class="qi-meta">${pack ? pack.emoji + ' ' + escapeHtml(pack.name) : '?'} · ${q.type === 'tf' ? '是非題' : '選擇題'} · ${LEVELS[q.level] || ''}</div>
+          <div class="qi-meta">${pack ? pack.emoji + ' ' + escapeHtml(pack.name) : '?'} · ${q.type === 'tf' ? '是非題' : q.type === 'zh' ? '🔊 聽力題' : '選擇題'} · ${LEVELS[q.level] || ''}</div>
           <div class="qi-ans">✔ ${escapeHtml(q.options[q.correct])}</div>
         </div>
         <div class="qi-actions">
