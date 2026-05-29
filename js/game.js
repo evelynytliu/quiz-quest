@@ -124,6 +124,9 @@ window.Game = (function () {
     nineteen:'19', twenty:'20' };
   const TRUE_WORDS = ['true', 'yes', 'right', 'correct', 'yeah', 'yep', 'yup'];
   const FALSE_WORDS = ['false', 'no', 'wrong', 'nope', 'nah'];
+  // little filler / article words that shouldn't have to be spoken
+  const STOP = { a:1, an:1, the:1, of:1, is:1, it:1, its:1, to:1, and:1, or:1,
+    um:1, uh:1, er:1, please:1, maybe:1, answer:1 };
 
   function normalize(s) {
     return String(s).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -140,42 +143,53 @@ window.Game = (function () {
     return d[m][n];
   }
 
+  // the "key" words of an option, with little filler/article words removed
+  // so "a rock" just needs "rock", "the moon" just needs "moon".
+  function keyWords(normOpt) {
+    const toks = normOpt.split(' ').filter(w => w && !STOP[w]);
+    return toks.length ? toks : normOpt.split(' ').filter(Boolean);
+  }
+
   function spokenToIndex(alts, options) {
-    const opts = options.map(o => toDigits(normalize(o)));
+    const optNorm = options.map(o => toDigits(normalize(o)));
+    const optKeys = optNorm.map(keyWords);
     let best = -1, bestScore = 0;
 
     for (const raw of alts || []) {
       const t = toDigits(normalize(raw));
       if (!t) continue;
-      const tokens = t.split(' ');
+      const tokens = t.split(' ').filter(Boolean);
+      const tokenSet = {};
+      tokens.forEach(tk => { tokenSet[tk] = 1; });
 
       // True / False questions: accept friendly synonyms
-      if (options.length === 2 && (opts[0] === 'true' || opts[1] === 'false')) {
-        const ti = opts[0] === 'true' ? 0 : 1;
-        const fi = opts[1] === 'false' ? 1 : 0;
+      if (options.length === 2 && (optNorm[0] === 'true' || optNorm[1] === 'false')) {
+        const ti = optNorm[0] === 'true' ? 0 : 1;
+        const fi = optNorm[1] === 'false' ? 1 : 0;
         for (const tok of tokens) {
           if (TRUE_WORDS.indexOf(tok) >= 0) return ti;
           if (FALSE_WORDS.indexOf(tok) >= 0) return fi;
         }
       }
 
-      for (let i = 0; i < opts.length; i++) {
-        const o = opts[i];
+      for (let i = 0; i < optNorm.length; i++) {
+        const o = optNorm[i], keys = optKeys[i];
         let score = 0;
-        if (t === o) score = 100;
-        else if (tokens.indexOf(o) >= 0) score = 92;            // option is one spoken word
-        else if (o.length >= 3 && t.indexOf(o) >= 0) score = 82; // option phrase inside speech
-        else if (t.length >= 3 && o.indexOf(t) >= 0) score = 72;
-        else if (o.indexOf(' ') < 0) {                           // single-word option: fuzzy
-          for (const tok of tokens) {
-            if (tok === o) { score = Math.max(score, 92); }
-            else if (o.length >= 4 && lev(tok, o) <= 1) { score = Math.max(score, 76); }
+        if (t === o) score = 100;                                  // exact
+        else if (o.length >= 3 && t.indexOf(o) >= 0) score = 90;   // whole option said inside a sentence
+        else {
+          // how many of the option's key words did they say? (any one is enough)
+          let hit = 0, near = 0;
+          for (const w of keys) {
+            if (tokenSet[w]) hit++;
+            else if (w.length >= 4 && tokens.some(tk => lev(tk, w) <= 1)) near++;
           }
-        } else {                                                 // multi-word option: token overlap
-          const oset = o.split(' ');
-          let shared = 0;
-          tokens.forEach(tok => { if (oset.indexOf(tok) >= 0) shared++; });
-          if (shared) score = 45 + shared * 16;
+          if (keys.length) {
+            if (hit === keys.length) score = 95;                   // said every key word
+            else if (hit > 0) score = 84;                          // said at least one key word
+            else if (near === keys.length) score = 80;             // close on every key word
+            else if (near > 0) score = 74;                         // close on a key word
+          }
         }
         if (score > bestScore) { bestScore = score; best = i; }
       }
