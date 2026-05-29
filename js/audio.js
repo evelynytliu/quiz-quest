@@ -45,6 +45,7 @@ window.Sfx = (function () {
 
   /* ---------- speech ---------- */
   let voice = null;
+  let zhVoice = null;
   function pickVoice() {
     if (!('speechSynthesis' in window)) return;
     const voices = speechSynthesis.getVoices();
@@ -52,16 +53,35 @@ window.Sfx = (function () {
     voice = voices.find(v => /en(-|_)?US/i.test(v.lang) && /female|samantha|zira|google us english/i.test(v.name))
          || voices.find(v => /^en/i.test(v.lang))
          || voices[0] || null;
+    // a Mandarin voice for reading Chinese characters aloud (zh-TW preferred)
+    zhVoice = voices.find(v => /^zh(-|_)?(tw|hant)/i.test(v.lang))
+           || voices.find(v => /^zh(-|_)?(cn|hans)/i.test(v.lang))
+           || voices.find(v => /^zh/i.test(v.lang))
+           || voices.find(v => /^(yue|cmn)/i.test(v.lang)) || null;
   }
   if ('speechSynthesis' in window) {
     pickVoice();
     speechSynthesis.onvoiceschanged = pickVoice;
   }
 
+  // is a Mandarin/Chinese voice available on this device?
+  function zhAvailable() {
+    if (zhVoice) return true;
+    try { return (speechSynthesis.getVoices() || []).some(v => /^(zh|yue|cmn)/i.test(v.lang)); }
+    catch (e) { return false; }
+  }
+
   function utter(text, rate) {
     const u = new SpeechSynthesisUtterance(text);
     u.rate = rate || 0.85; u.pitch = 1.12; u.volume = 1;
     if (voice) u.voice = voice;
+    return u;
+  }
+  function utterZh(text, rate) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = (zhVoice && zhVoice.lang) || 'zh-TW';
+    u.rate = rate || 0.75; u.pitch = 1.05; u.volume = 1;   // a touch slower & clearer
+    if (zhVoice) u.voice = zhVoice;
     return u;
   }
 
@@ -71,6 +91,18 @@ window.Sfx = (function () {
     if (!('speechSynthesis' in window) || muted) return;
     speechSynthesis.cancel();
     const u = utter(text);
+    if (typeof onState === 'function') {
+      u.onstart = () => onState(true);
+      u.onend = () => onState(false);
+    }
+    speechSynthesis.speak(u);
+  }
+
+  // Speak a Chinese word/character in Mandarin (say it twice so it's clear).
+  function speakZh(text, onState) {
+    if (!('speechSynthesis' in window) || muted) return;
+    speechSynthesis.cancel();
+    const u = utterZh(text);
     if (typeof onState === 'function') {
       u.onstart = () => onState(true);
       u.onend = () => onState(false);
@@ -98,10 +130,34 @@ window.Sfx = (function () {
     }
   }
 
+  // For Chinese "meaning" questions: say the character in Mandarin first (so the
+  // child hears its real sound), then read the English question + options.
+  function speakChineseMeaning(zhChar, question, options, onOption) {
+    if (!('speechSynthesis' in window) || muted) return;
+    speechSynthesis.cancel();
+    if (zhChar && zhAvailable()) {
+      speechSynthesis.speak(utterZh(zhChar, 0.7));
+      speechSynthesis.speak(utterZh(zhChar, 0.7));   // twice, nice and clear
+    }
+    speechSynthesis.speak(utter(question, 0.82));
+    if (options && options.length) {
+      speechSynthesis.speak(utter('Is it ...', 0.85));
+      options.forEach((o, i) => {
+        const u = utter(String(o), 0.85);
+        if (typeof onOption === 'function') {
+          u.onstart = () => onOption(i, true);
+          u.onend = () => onOption(i, false);
+        }
+        speechSynthesis.speak(u);
+      });
+    }
+  }
+
   function stopSpeak() { if ('speechSynthesis' in window) speechSynthesis.cancel(); }
 
   function resume() { const c = ac(); if (c && c.state === 'suspended') c.resume(); }
   function setMuted(m) { muted = m; if (m) stopSpeak(); }
 
-  return { correct, wrong, tick, beep, go, fanfare, tap, speak, speakList, stopSpeak, resume, setMuted };
+  return { correct, wrong, tick, beep, go, fanfare, tap, speak, speakList,
+    speakZh, speakChineseMeaning, zhAvailable, stopSpeak, resume, setMuted };
 })();

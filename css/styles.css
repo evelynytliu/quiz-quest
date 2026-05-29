@@ -264,6 +264,14 @@ body{
 .answer-btn.a2,.answer-btn.a4,.answer-btn.a5,.answer-btn.a6{color:var(--ink)}
 .answer-btn.a2 .opt-speak,.answer-btn.a4 .opt-speak,.answer-btn.a5 .opt-speak,.answer-btn.a6 .opt-speak{background:rgba(54,50,44,.14)}
 
+/* big Chinese character answer tiles (listening questions) */
+.answer-btn.zh-opt{justify-content:center;align-items:center;min-height:104px}
+.zh-opt-char{
+  flex:1;text-align:center;line-height:1;font-weight:700;
+  font-size:clamp(2.8rem,11vw,4.2rem);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',var(--font-body);
+}
+
 /* big O / X buttons for True / False questions */
 .tf-btn{
   flex-direction:column;justify-content:center;align-items:center;gap:4px;

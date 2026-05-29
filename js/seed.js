@@ -402,6 +402,32 @@ window.SEED = {
     { packId:'chinese', type:'mc', emoji:'牛', text:'What does this Chinese word mean?',
       options:['Cow','Dog','Cat','Bird'], correct:0, time:20, level:3 },
     { packId:'chinese', type:'mc', emoji:'魚', text:'What does this Chinese word mean?',
-      options:['Fish','Bird','Bug','Cat'], correct:0, time:20, level:3 }
+      options:['Fish','Bird','Bug','Cat'], correct:0, time:20, level:3 },
+
+    /* --- listening: hear the Mandarin word, tap the matching character --- */
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'日',
+      options:['日','月','水','火'], correct:0, time:22, level:1 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'月',
+      options:['月','日','山','木'], correct:0, time:22, level:1 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'水',
+      options:['水','火','山','木'], correct:0, time:22, level:1 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'火',
+      options:['火','水','日','人'], correct:0, time:22, level:1 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'山',
+      options:['山','水','木','口'], correct:0, time:22, level:2 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'木',
+      options:['木','山','水','火'], correct:0, time:22, level:2 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'人',
+      options:['人','大','小','口'], correct:0, time:22, level:2 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'大',
+      options:['大','小','上','下'], correct:0, time:22, level:2 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'小',
+      options:['小','大','水','人'], correct:0, time:22, level:2 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'口',
+      options:['口','日','月','手'], correct:0, time:22, level:3 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'手',
+      options:['手','口','人','大'], correct:0, time:22, level:3 },
+    { packId:'chinese', type:'zh', emoji:'👂', text:'Listen and tap the word you hear', zh:'天',
+      options:['天','日','月','山'], correct:0, time:22, level:3 }
   ]
 };
