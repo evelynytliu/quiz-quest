@@ -44,7 +44,7 @@ window.Game = (function () {
 
   el.speakBtn.addEventListener('click', () => {
     const q = queue[idx];
-    if (q) { Sfx.tap(); Sfx.speakList(q.speak || q.text, q.options); }
+    if (q) { Sfx.tap(); clearSpeaking(); Sfx.speakList(q.speak || q.text, q.options, setSpeaking); }
   });
 
   el.fbNext.addEventListener('click', () => { Sfx.tap(); clearTimeout(advanceTimer); next(); });
@@ -78,6 +78,15 @@ window.Game = (function () {
         setTimeout(showQuestion, 650);
       }
     }, 800);
+  }
+
+  // gently enlarge the answer button the voice is currently reading
+  function setSpeaking(i, on) {
+    const b = el.answers.children[i];
+    if (b) b.classList.toggle('speaking', on);
+  }
+  function clearSpeaking() {
+    [...el.answers.children].forEach(b => b.classList.remove('speaking'));
   }
 
   function showQuestion() {
@@ -132,14 +141,14 @@ window.Game = (function () {
         btn.addEventListener('click', () => answer(i, btn));
         btn.querySelector('.opt-speak').addEventListener('click', e => {
           e.stopPropagation();
-          if (!locked) { Sfx.stopSpeak(); Sfx.speak(String(opt)); }
+          if (!locked) { Sfx.stopSpeak(); clearSpeaking(); Sfx.speak(String(opt), on => setSpeaking(i, on)); }
         });
         el.answers.appendChild(btn);
       });
     }
 
     // auto-read the question AND every option aloud (Miles decodes by sound)
-    setTimeout(() => Sfx.speakList(q.speak || q.text, q.options), 300);
+    setTimeout(() => Sfx.speakList(q.speak || q.text, q.options, setSpeaking), 300);
 
     startTimer(q.time || 20);
     qStart = Date.now();
@@ -202,6 +211,7 @@ window.Game = (function () {
     // disable buttons & reveal
     [...el.answers.children].forEach((b, i) => {
       b.style.pointerEvents = 'none';
+      b.classList.remove('speaking');
       if (i === q.correct) b.classList.add('right');
       else if (i === choice) b.classList.add('wrong');
       else b.classList.add('dimmed');
@@ -233,6 +243,7 @@ window.Game = (function () {
     const q = queue[idx];
     [...el.answers.children].forEach((b, i) => {
       b.style.pointerEvents = 'none';
+      b.classList.remove('speaking');
       if (i === q.correct) b.classList.add('right'); else b.classList.add('dimmed');
     });
     streak = 0;
