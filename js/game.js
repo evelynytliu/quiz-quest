@@ -12,6 +12,9 @@ window.Game = (function () {
   let packId = '';
   let timer = null;
   let qStart = 0;
+  let timerTotal = 0;     // ms for the current question
+  let timerRemaining = 0; // ms left, banked whenever the timer is paused
+  let timerRunStart = 0;  // Date.now() when the current running segment began
   let locked = false;
   let countdownTimer = null;
   let advanceTimer = null;
@@ -72,36 +75,43 @@ window.Game = (function () {
     if (!q) return;
     Sfx.stopSpeak();
     clearSpeaking();
+    pauseTimer();                 // stop the clock — give them time to speak
     const my = ++listenToken;
+
+    // no answer was chosen: show a message and start the clock again
+    function done(msg, speak) {
+      if (my !== listenToken) return;
+      listenToken++;              // ensure only one termination path runs
+      setListenState('idle', msg || '');
+      resumeTimer();
+      if (speak) Sfx.speak(speak);
+    }
+    const TRY = "Didn't catch that — try again, or tap your answer.";
+
     Voice.start({
       onStart: () => { if (my !== listenToken) return; setListenState('listening', 'Listening… say your answer!'); },
       onResult: (alts) => {
         if (my !== listenToken || locked) return;
         const i = spokenToIndex(alts, q.options);
         if (i >= 0) {
-          listenToken++;                        // we handled it; mute later callbacks
+          listenToken++;                        // handled — keep timer paused, we're answering
           setListenState('idle', '');
           setSpeaking(i, true);                 // briefly show what was picked
           Voice.stop();
           setTimeout(() => { if (locked) return; setSpeaking(i, false); answer(i, el.answers.children[i]); }, 350);
         }
+        // no confident match: let onEnd call done() and resume the clock
       },
       onError: (code) => {
-        if (my !== listenToken) return;
-        if (code === 'not-allowed' || code === 'service-not-allowed') {
-          listenToken++;                        // handled — don't also nag from onEnd
-          setListenState('idle', '🎤 Microphone is off — allow it in Settings, or just tap.');
-        } else if (code === 'network') {
-          listenToken++;
-          setListenState('idle', '🌐 Need internet for voice — tap your answer instead.');
-        }
-        // other codes (no-speech, aborted) fall through to onEnd
+        if (code === 'not-allowed' || code === 'service-not-allowed')
+          done('🎤 Microphone is off — allow it in Settings, or just tap.');
+        else if (code === 'network')
+          done('🌐 Need internet for voice — tap your answer instead.');
+        else if (code !== 'aborted')
+          done(TRY, "I didn't catch that. Try again, or tap your answer.");
+        // 'aborted' = we stopped on purpose; ignore
       },
-      onEnd: () => {
-        if (my !== listenToken) return;         // handled or superseded
-        setListenState('idle', "Didn't catch that — try again, or tap your answer.");
-        Sfx.speak("I didn't catch that. Try again, or tap your answer.");
-      }
+      onEnd: () => { done(TRY, "I didn't catch that. Try again, or tap your answer."); }
     });
   }
 
@@ -316,22 +326,44 @@ window.Game = (function () {
 
   function startTimer(seconds) {
     clearInterval(timer);
-    const total = seconds * 1000;
+    timerTotal = seconds * 1000;
+    timerRemaining = timerTotal;
     el.timerBar.classList.remove('warn');
     el.timerBar.style.width = '100%';
     el.timerNum.textContent = seconds;
-    const t0 = Date.now();
+    runTimer();
+  }
+
+  function runTimer() {
+    clearInterval(timer);
+    timerRunStart = Date.now();
     timer = setInterval(() => {
-      const elapsed = Date.now() - t0;
-      const left = Math.max(0, total - elapsed);
-      const pct = (left / total) * 100;
+      const left = Math.max(0, timerRemaining - (Date.now() - timerRunStart));
+      const pct = (left / timerTotal) * 100;
       el.timerBar.style.width = pct + '%';
       const secLeft = Math.ceil(left / 1000);
       el.timerNum.textContent = secLeft;
       if (pct < 35) el.timerBar.classList.add('warn');
       if (secLeft <= 5 && secLeft > 0 && !locked) Sfx.tick();
-      if (left <= 0) { clearInterval(timer); if (!locked) timeUp(); }
+      if (left <= 0) { clearInterval(timer); timer = null; if (!locked) timeUp(); }
     }, 100);
+  }
+
+  // pause the countdown (e.g. while listening to a spoken answer)
+  function pauseTimer() {
+    if (!timer) return;
+    timerRemaining = Math.max(0, timerRemaining - (Date.now() - timerRunStart));
+    clearInterval(timer); timer = null;
+  }
+  function resumeTimer() {
+    if (timer || locked || timerRemaining <= 0) return;
+    runTimer();
+  }
+  // seconds actually consumed so far (excludes any paused/talking time)
+  function timerUsedSeconds() {
+    let left = timerRemaining;
+    if (timer) left = Math.max(0, timerRemaining - (Date.now() - timerRunStart));
+    return (timerTotal - left) / 1000;
   }
 
   function answer(choice, btn) {
@@ -344,7 +376,7 @@ window.Game = (function () {
     setListenState('idle', '');
     const q = queue[idx];
     const right = choice === q.correct;
-    const used = (Date.now() - qStart) / 1000;
+    const used = timerUsedSeconds();   // excludes time spent talking/listening
     const limit = q.time || 20;
 
     // disable buttons & reveal
