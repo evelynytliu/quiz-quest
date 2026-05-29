@@ -65,7 +65,7 @@ window.Store = (function () {
 
   function addPack(name, emoji) {
     const id = 'p' + uid();
-    const colors = ['a0', 'a1', 'a2', 'a3'];
+    const colors = ['a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6'];
     const color = colors[data.packs.length % colors.length];
     data.packs.push({ id, name, emoji: emoji || '⭐', color });
     save();

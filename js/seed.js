@@ -5,11 +5,11 @@ window.SEED = {
   packs: [
     { id: 'math-machine', name: 'Math Machine', emoji: '🤖', color: 'a1', generated: true },
     { id: 'science',   name: 'Science Lab',     emoji: '🔬', color: 'a3' },
-    { id: 'english',   name: 'Word Power',      emoji: '📖', color: 'a1' },
+    { id: 'english',   name: 'Word Power',      emoji: '📖', color: 'a4' },
     { id: 'cartoons',  name: 'Cartoon Heroes',  emoji: '📺', color: 'a2' },
     { id: 'challenge', name: 'Beast Challenge',  emoji: '🏆', color: 'a0' },
-    { id: 'world',     name: 'Cool Facts',      emoji: '🌍', color: 'a3' },
-    { id: 'chinese',   name: 'First Chinese 中文', emoji: '🀄', color: 'a2' }
+    { id: 'world',     name: 'Cool Facts',      emoji: '🌍', color: 'a5' },
+    { id: 'chinese',   name: 'First Chinese 中文', emoji: '🀄', color: 'a6' }
   ],
   questions: [
     /* ---------------- SCIENCE LAB (Mark Rober vibes) ---------------- */
