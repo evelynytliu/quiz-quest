@@ -65,20 +65,36 @@ window.Sfx = (function () {
     return u;
   }
 
-  function speak(text) {
+  // onState(isSpeaking) fires when this single utterance starts / ends, so the
+  // caller can highlight the matching button while it's being read.
+  function speak(text, onState) {
     if (!('speechSynthesis' in window) || muted) return;
     speechSynthesis.cancel();
-    speechSynthesis.speak(utter(text));
+    const u = utter(text);
+    if (typeof onState === 'function') {
+      u.onstart = () => onState(true);
+      u.onend = () => onState(false);
+    }
+    speechSynthesis.speak(u);
   }
 
   // Read the question, then each answer option in order (with a tiny lead-in).
-  function speakList(question, options) {
+  // onOption(index, isSpeaking) fires as each option is read, so the caller can
+  // gently enlarge the matching button while the voice is on it.
+  function speakList(question, options, onOption) {
     if (!('speechSynthesis' in window) || muted) return;
     speechSynthesis.cancel();
     speechSynthesis.speak(utter(question, 0.82));
     if (options && options.length) {
       speechSynthesis.speak(utter('Is it ...', 0.85));
-      options.forEach(o => speechSynthesis.speak(utter(String(o), 0.85)));
+      options.forEach((o, i) => {
+        const u = utter(String(o), 0.85);
+        if (typeof onOption === 'function') {
+          u.onstart = () => onOption(i, true);
+          u.onend = () => onOption(i, false);
+        }
+        speechSynthesis.speak(u);
+      });
     }
   }
 

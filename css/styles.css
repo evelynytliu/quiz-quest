@@ -231,6 +231,9 @@ body{
 .tf-btn .tf-label{font-size:1.05rem;font-weight:800;letter-spacing:1px;opacity:.85;text-transform:uppercase}
 .tf-o{background:var(--c-green)}
 .tf-x{background:var(--c-red)}
+/* gently grow the option the voice is currently reading, so kids can
+   follow along with which one is being spoken */
+.answer-btn.speaking{transform:scale(1.06);filter:brightness(1.12);box-shadow:var(--shadow);z-index:2}
 .answer-btn.dimmed{opacity:.32;filter:grayscale(.6)}
 .answer-btn.right{outline:4px solid var(--gold);outline-offset:2px;animation:rightPulse .5s ease}
 .answer-btn.wrong{outline:4px solid #e7dcc6;outline-offset:2px;animation:shake .4s ease}
