@@ -237,18 +237,19 @@ body{
 @keyframes rightPulse{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 
-/* compact banner pinned to the top — leaves the answer grid (with the
-   correct answer highlighted) visible so mistakes can be reviewed */
+/* compact banner pinned to the bottom — leaves the question and the
+   answer grid (with the correct answer highlighted) visible above it so
+   mistakes can be reviewed */
 .feedback{
-  position:fixed;left:50%;top:64px;transform:translateX(-50%);
+  position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);
   width:min(620px,94vw);background:var(--card);border-radius:18px;
   box-shadow:var(--shadow);z-index:50;color:var(--ink);
   display:flex;align-items:center;gap:16px;padding:16px 20px;
-  border:1px solid rgba(0,0,0,.05);animation:dropIn .28s ease;
+  border:1px solid rgba(0,0,0,.05);animation:riseIn .28s ease;
 }
 .feedback.correct{box-shadow:0 0 0 3px var(--c-green) inset, var(--shadow)}
 .feedback.wrong{box-shadow:0 0 0 3px var(--c-red) inset, var(--shadow)}
-@keyframes dropIn{0%{opacity:0;transform:translate(-50%,-16px)}100%{opacity:1;transform:translate(-50%,0)}}
+@keyframes riseIn{0%{opacity:0;transform:translate(-50%,18px)}100%{opacity:1;transform:translate(-50%,0)}}
 .feedback-icon{font-size:3rem;flex:0 0 auto;animation:pop .4s ease}
 .feedback-main{flex:1;text-align:left;min-width:0}
 .feedback-text{font-family:var(--font-head);font-weight:600;font-size:1.5rem;line-height:1.1}
