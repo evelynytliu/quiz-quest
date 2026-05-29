@@ -196,7 +196,7 @@ body{
   box-shadow:var(--shadow-sm);font-size:.95rem;letter-spacing:.2px;
 }
 
-.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:auto;padding-bottom:16px}
+.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;padding-bottom:16px}
 .answer-grid.single{grid-template-columns:1fr}
 .answer-btn{
   border:none;border-radius:var(--radius);cursor:pointer;font-family:var(--font-body);
