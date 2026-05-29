@@ -59,7 +59,9 @@ window.Game = (function () {
 
   function runCountdown() {
     const pack = Store.getPack(packId);
-    el.cdPack.textContent = (pack ? pack.emoji + ' ' + pack.name : '') + ' — Get Ready!';
+    const who = Store.getCurrentPlayer();
+    el.cdPack.textContent = (pack ? pack.emoji + ' ' + pack.name : '')
+      + (who ? ' — ' + who + ', Get Ready!' : ' — Get Ready!');
     showScreen('countdown');
     let n = 3;
     el.cdNum.textContent = n;
@@ -297,7 +299,8 @@ window.Game = (function () {
       : stars === 2 ? ['Great job! 🎉', 'Well done! 👏', 'So good! 🌟']
       : ['Good try! 💪', 'Keep practising! 🚀', 'Nice effort! 😊'];
     el.rTitle.textContent = titles[Math.floor(Math.random() * titles.length)];
-    el.rLine.textContent = `You got ${correctCount} / ${total} right` + (bestStreak >= 3 ? `  •  best streak 🔥${bestStreak}` : '');
+    const who = Store.getCurrentPlayer();
+    el.rLine.textContent = `${who ? who + ', you' : 'You'} got ${correctCount} / ${total} right` + (bestStreak >= 3 ? `  •  best streak 🔥${bestStreak}` : '');
     el.rScore.textContent = score;
 
     const isBest = Store.setBest(packId, score);

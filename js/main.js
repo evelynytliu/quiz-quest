@@ -22,6 +22,12 @@
 
   /* ---------- home ---------- */
   function renderHome() {
+    const cur = Store.getCurrentPlayer();
+    const tagline = document.querySelector('.tagline');
+    if (tagline) tagline.textContent = cur
+      ? `Hi, ${cur}! 👋  Pick a game and beat your best`
+      : 'Pick a game and beat your high score';
+
     const grid = document.getElementById('pack-grid');
     grid.innerHTML = '';
     Store.getPacks().forEach(p => {
@@ -124,10 +130,41 @@
     Sfx.tap(); Game.stop(); renderHome(); showScreen('home');
   });
 
-  /* ---------- name ---------- */
-  const nameInput = document.getElementById('player-name');
-  nameInput.value = Store.getName();
-  nameInput.addEventListener('input', () => Store.setName(nameInput.value.trim()));
+  /* ---------- players ---------- */
+  function renderPlayers() {
+    const list = document.getElementById('player-list');
+    list.innerHTML = '';
+    const players = Store.getPlayers();
+    const current = Store.getCurrentPlayer();
+    if (!players.length) {
+      const hint = document.createElement('span');
+      hint.className = 'player-hint';
+      hint.textContent = 'Add your name →';
+      list.appendChild(hint);
+    }
+    players.forEach(name => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'player-chip' + (name === current ? ' active' : '');
+      const nm = document.createElement('span'); nm.className = 'pc-name'; nm.textContent = name;
+      const x = document.createElement('span'); x.className = 'pc-x'; x.textContent = '✕'; x.title = 'Remove';
+      chip.appendChild(nm); chip.appendChild(x);
+      chip.addEventListener('click', () => { Sfx.tap(); Store.setCurrentPlayer(name); renderPlayers(); renderHome(); });
+      x.addEventListener('click', e => {
+        e.stopPropagation();
+        if (confirm(`移除玩家「${name}」和他的最高分紀錄？`)) { Store.removePlayer(name); renderPlayers(); renderHome(); }
+      });
+      list.appendChild(chip);
+    });
+  }
+
+  document.getElementById('add-player').addEventListener('click', () => {
+    Sfx.tap();
+    const name = (prompt('小朋友的名字：') || '').trim();
+    if (!name) return;
+    Store.addPlayer(name);
+    renderPlayers(); renderHome();
+  });
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -136,6 +173,7 @@
   /* ---------- boot ---------- */
   Store.load();
   Editor.init();
+  renderPlayers();
   renderHome();
   showScreen('home');
   // unlock audio on first interaction (browser autoplay policy)

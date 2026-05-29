@@ -3,7 +3,9 @@
    between devices. */
 window.Store = (function () {
   const KEY = 'milesQuiz.v1';
-  const SCORE_KEY = 'milesQuiz.best.v1';
+  const SCORE_KEY = 'milesQuiz.best.v2';      // best scores, now keyed per player
+  const PLAYERS_KEY = 'milesQuiz.players.v1'; // list of player names
+  const CURRENT_KEY = 'milesQuiz.current.v1'; // the active player's name
 
   let data = null;
 
@@ -21,6 +23,7 @@ window.Store = (function () {
       data.questions.forEach(q => { if (!q.id) q.id = uid(); });
       save();
     }
+    migratePlayers();
     return data;
   }
 
@@ -188,29 +191,82 @@ window.Store = (function () {
     return out;
   }
 
-  /* ---------- best scores ---------- */
-  function getBest(packId) {
-    try {
-      const all = JSON.parse(localStorage.getItem(SCORE_KEY) || '{}');
-      return all[packId] || 0;
-    } catch (e) { return 0; }
+  /* ---------- players ---------- */
+  function getPlayers() {
+    try { return JSON.parse(localStorage.getItem(PLAYERS_KEY) || '[]') || []; }
+    catch (e) { return []; }
   }
-  function setBest(packId, score) {
-    try {
-      const all = JSON.parse(localStorage.getItem(SCORE_KEY) || '{}');
-      if (score > (all[packId] || 0)) { all[packId] = score; localStorage.setItem(SCORE_KEY, JSON.stringify(all)); return true; }
-    } catch (e) {}
-    return false;
+  function savePlayers(list) {
+    try { localStorage.setItem(PLAYERS_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function getCurrentPlayer() {
+    const players = getPlayers();
+    let cur = '';
+    try { cur = localStorage.getItem(CURRENT_KEY) || ''; } catch (e) {}
+    if (cur && players.indexOf(cur) >= 0) return cur;
+    return players[0] || '';
+  }
+  function setCurrentPlayer(name) {
+    try { localStorage.setItem(CURRENT_KEY, name || ''); } catch (e) {}
+  }
+  function addPlayer(name) {
+    name = String(name || '').trim().slice(0, 14);
+    if (!name) return '';
+    const players = getPlayers();
+    if (players.indexOf(name) < 0) { players.push(name); savePlayers(players); }
+    setCurrentPlayer(name);
+    return name;
+  }
+  function removePlayer(name) {
+    savePlayers(getPlayers().filter(n => n !== name));
+    const all = allBest();
+    if (all[name]) { delete all[name]; saveBest(all); }       // drop their scores too
+    if (getCurrentPlayer() === name) setCurrentPlayer(getPlayers()[0] || '');
+  }
+  // one-time migration from the old single-name + global-score scheme
+  function migratePlayers() {
+    if (localStorage.getItem(PLAYERS_KEY) != null) return;     // already migrated
+    let oldName = '';
+    try { oldName = (localStorage.getItem('milesQuiz.name') || '').trim(); } catch (e) {}
+    if (oldName) {
+      savePlayers([oldName]);
+      setCurrentPlayer(oldName);
+      try {
+        const oldBest = JSON.parse(localStorage.getItem('milesQuiz.best.v1') || 'null');
+        if (oldBest && typeof oldBest === 'object') {
+          const all = allBest();
+          all[oldName] = Object.assign({}, all[oldName], oldBest);
+          saveBest(all);
+        }
+      } catch (e) {}
+    } else {
+      savePlayers([]);
+    }
   }
 
-  function getName() { try { return localStorage.getItem('milesQuiz.name') || ''; } catch (e) { return ''; } }
-  function setName(n) { try { localStorage.setItem('milesQuiz.name', n); } catch (e) {} }
+  /* ---------- best scores (per player) ---------- */
+  function allBest() { try { return JSON.parse(localStorage.getItem(SCORE_KEY) || '{}'); } catch (e) { return {}; } }
+  function saveBest(all) { try { localStorage.setItem(SCORE_KEY, JSON.stringify(all)); } catch (e) {} }
+  function getBest(packId) {
+    const p = getCurrentPlayer();
+    const all = allBest();
+    return (all[p] && all[p][packId]) || 0;
+  }
+  function setBest(packId, score) {
+    const p = getCurrentPlayer();
+    if (!p) return false;                                       // no player → don't track
+    const all = allBest();
+    all[p] = all[p] || {};
+    if (score > (all[p][packId] || 0)) { all[p][packId] = score; saveBest(all); return true; }
+    return false;
+  }
 
   return {
     load, save, getPacks, getPack, questionsFor, allQuestions, countFor,
     upsertQuestion, deleteQuestion, addPack, deletePack,
     exportJSON, importJSON, resetDefaults,
     generateMath, shuffle, shuffleOptions,
-    getBest, setBest, getName, setName, uid
+    getBest, setBest, uid,
+    getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer
   };
 })();
