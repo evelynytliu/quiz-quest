@@ -6,6 +6,8 @@ window.Store = (function () {
   const SCORE_KEY = 'milesQuiz.best.v2';      // best scores, now keyed per player
   const PLAYERS_KEY = 'milesQuiz.players.v1'; // list of player names
   const CURRENT_KEY = 'milesQuiz.current.v1'; // the active player's name
+  const SEEDED_KEY = 'milesQuiz.seeded.v1';   // signatures of seed questions already merged
+  const SEEDED_PACKS_KEY = 'milesQuiz.seededPacks.v1';
 
   let data = null;
 
@@ -23,12 +25,58 @@ window.Store = (function () {
       data.questions.forEach(q => { if (!q.id) q.id = uid(); });
       save();
     }
+    mergeSeed();      // pull in any new default questions/packs added since last time
     migratePlayers();
     return data;
   }
 
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  // stable content fingerprint of a question, so we can tell which seed
+  // questions are already present without relying on ids.
+  function qSig(q) {
+    return q.packId + '||' + (q.text || '') + '||' + (q.emoji || '') + '||' + (q.options || []).join('|');
+  }
+
+  // Add default questions/packs that aren't on this device yet, without
+  // touching the parent's custom questions or re-adding ones they deleted.
+  function mergeSeed() {
+    if (!window.SEED) return;
+
+    let seededArr = null, packsArr = null;
+    try { seededArr = JSON.parse(localStorage.getItem(SEEDED_KEY) || 'null'); } catch (e) {}
+    try { packsArr = JSON.parse(localStorage.getItem(SEEDED_PACKS_KEY) || 'null'); } catch (e) {}
+    const firstRun = !Array.isArray(seededArr);
+    const firstRunPacks = !Array.isArray(packsArr);
+    const seeded = new Set(firstRun ? [] : seededArr);
+    const seededPacks = new Set(firstRunPacks ? [] : packsArr);
+    let changed = false;
+
+    // new default packs (packs already have stable ids)
+    const havePack = new Set(data.packs.map(p => p.id));
+    window.SEED.packs.forEach(sp => {
+      const known = seededPacks.has(sp.id) || (firstRunPacks && havePack.has(sp.id));
+      if (!known && !havePack.has(sp.id)) { data.packs.push(clone(sp)); havePack.add(sp.id); changed = true; }
+      seededPacks.add(sp.id);
+    });
+
+    // new default questions
+    const haveSig = new Set(data.questions.map(qSig));
+    window.SEED.questions.forEach(sq => {
+      const k = qSig(sq);
+      const known = seeded.has(k) || (firstRun && haveSig.has(k));
+      if (!known && !haveSig.has(k)) {
+        const copy = clone(sq); copy.id = uid();
+        data.questions.push(copy); haveSig.add(k); changed = true;
+      }
+      seeded.add(k);
+    });
+
+    try { localStorage.setItem(SEEDED_KEY, JSON.stringify(Array.from(seeded))); } catch (e) {}
+    try { localStorage.setItem(SEEDED_PACKS_KEY, JSON.stringify(Array.from(seededPacks))); } catch (e) {}
+    if (changed) save();
   }
 
   function getPacks() { return data.packs; }
