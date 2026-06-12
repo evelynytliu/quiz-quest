@@ -87,7 +87,7 @@ window.Prizes = (function () {
   function renderHint() {
     el.hint.textContent = Store.getCoins() >= EGG_COST
       ? 'Tap the egg to crack it open!'
-      : 'You need 🪙' + EGG_COST + ' — play a quiz to earn more coins!';
+      : 'You need 💰' + EGG_COST + ' — play a quiz to earn more coins!';
   }
 
   function renderGrid() {
@@ -156,7 +156,7 @@ window.Prizes = (function () {
       el.egg.classList.remove('wobble');
       el.egg.classList.add('reveal');
       el.egg.textContent = s.e;
-      el.name.textContent = isNew ? '✨ New! ' + s.n : s.n + ' again! +🪙' + DUP_REFUND + ' back';
+      el.name.textContent = isNew ? '✨ New! ' + s.n : s.n + ' again! +💰' + DUP_REFUND + ' back';
       el.rarity.textContent = RARITY[s.r];
       el.rarity.className = 'egg-rarity r' + s.r;
       Sfx.coin();

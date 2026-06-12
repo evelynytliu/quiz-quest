@@ -544,8 +544,8 @@ window.Game = (function () {
     // prize-machine coins: one per correct answer, plus a star bonus
     const coinsEarned = correctCount + (stars === 3 ? 5 : stars === 2 ? 2 : 0);
     if (coinsEarned) { Store.addCoins(coinsEarned); Sfx.coin(); }
-    el.rCoins.textContent = coinsEarned ? '🪙 +' + coinsEarned + ' coins earned!' : '';
-    if (el.rPrizes) el.rPrizes.textContent = '🎁 Prizes · 🪙' + Store.getCoins();
+    el.rCoins.textContent = coinsEarned ? '💰 +' + coinsEarned + ' coins earned!' : '';
+    if (el.rPrizes) el.rPrizes.textContent = '🎁 Prizes · 💰' + Store.getCoins();
 
     const buddy = Store.getBuddy();
     el.rBuddy.textContent = buddy;

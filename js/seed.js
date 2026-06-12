@@ -226,7 +226,7 @@ window.SEED = {
       options:['60','40','100','140'], correct:0, time:25, level:3 },
     { packId:'challenge', type:'mc', emoji:'🔥', text:'A streak means you got many answers...?',
       options:['Right in a row','Wrong','Slowly','Backwards'], correct:0, time:18, level:1 },
-    { packId:'challenge', type:'mc', emoji:'🪙', text:'You have 5 coins and find 5 more. How many coins now?',
+    { packId:'challenge', type:'mc', emoji:'💰', text:'You have 5 coins and find 5 more. How many coins now?',
       options:['10','9','5','15'], correct:0, time:20, level:1 },
     { packId:'challenge', type:'mc', emoji:'🍪', text:'There are 20 cookies. You eat 10. How many are left?',
       options:['10','20','0','30'], correct:0, time:20, level:2 },
