@@ -3,6 +3,7 @@
 (function () {
   const ROUND_SIZE = 10;
   let pendingMathLevel = null;
+  let pendingZhLevel = null;
   let gateAnswer = 0;
 
   const screens = {
@@ -56,7 +57,11 @@
   function launchPack(packId) {
     const pack = Store.getPack(packId);
     if (!pack) return;
-    if (pack.generated) { openMathModal(packId); return; }
+    if (pack.generated) {
+      // generated packs ask for a level first
+      if (packId === 'zh-quest') openZhModal(); else openMathModal();
+      return;
+    }
     let qs = Store.questionsFor(packId).slice();
     if (!qs.length) return;
     qs = Store.shuffle(qs).slice(0, ROUND_SIZE).map(Store.shuffleOptions);
@@ -70,23 +75,42 @@
     Game.start('math-machine', qs);
   }
 
+  function startZhQuest(level) {
+    const qs = Store.generateZh(level, ROUND_SIZE);
+    Game.stop();
+    Game.start('zh-quest', qs);
+  }
+
   function replay() {
     const pid = Game.currentPack();
     const pack = Store.getPack(pid);
-    if (pack && pack.generated) { startMath(pendingMathLevel || 2); }
+    if (pack && pack.generated) {
+      if (pid === 'zh-quest') startZhQuest(pendingZhLevel || 1);
+      else startMath(pendingMathLevel || 2);
+    }
     else { launchPack(pid); }
   }
 
-  /* ---------- math modal ---------- */
+  /* ---------- level modals (math machine / character quest) ---------- */
   function openMathModal() { document.getElementById('math-modal').classList.remove('hidden'); }
+  function openZhModal() { document.getElementById('zh-modal').classList.remove('hidden'); }
   function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-  document.querySelectorAll('.level-btn').forEach(btn => {
+  document.querySelectorAll('#math-modal .level-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       Sfx.tap();
       pendingMathLevel = parseInt(btn.dataset.level, 10);
       closeModal('math-modal');
       startMath(pendingMathLevel);
+    });
+  });
+
+  document.querySelectorAll('#zh-modal .level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      Sfx.tap();
+      pendingZhLevel = parseInt(btn.dataset.level, 10);
+      closeModal('zh-modal');
+      startZhQuest(pendingZhLevel);
     });
   });
 

@@ -10,7 +10,8 @@ window.SEED = {
     { id: 'challenge', name: 'Beast Challenge',  emoji: '🏆', color: 'a0' },
     { id: 'world',     name: 'Cool Facts',      emoji: '🌍', color: 'a5' },
     { id: 'dinos',     name: 'Dino Land',       emoji: '🦖', color: 'a2' },
-    { id: 'chinese',   name: 'First Chinese 中文', emoji: '🀄', color: 'a6' }
+    { id: 'chinese',   name: 'First Chinese 中文', emoji: '🀄', color: 'a6' },
+    { id: 'zh-quest',  name: 'Character Quest 認字', emoji: '🐉', color: 'a4', generated: true }
   ],
   questions: [
     /* ---------------- SCIENCE LAB (Mark Rober vibes) ---------------- */

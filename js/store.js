@@ -242,6 +242,112 @@ window.Store = (function () {
     return out;
   }
 
+  /* ---------- character quest: generate Chinese reading questions ----------
+     Word bank for kids who can't read characters yet. Three game modes:
+       - zhpic:  see the character (spoken aloud) -> tap the matching picture
+       - see:    see a picture + hear the word    -> tap the matching character
+       - listen: hear the word only               -> tap the matching character
+     No reading required: everything is taught by sound and pictures.
+     (Pictures stick to older emoji so they render on more devices.) */
+  const ZH_WORDS = [
+    /* level 1 — first words */
+    { ch: '一', en: 'one',   pic: '1️⃣', lv: 1 },
+    { ch: '二', en: 'two',   pic: '2️⃣', lv: 1 },
+    { ch: '三', en: 'three', pic: '3️⃣', lv: 1 },
+    { ch: '日', en: 'sun',   pic: '☀️', lv: 1 },
+    { ch: '月', en: 'moon',  pic: '🌙', lv: 1 },
+    { ch: '水', en: 'water', pic: '💧', lv: 1 },
+    { ch: '火', en: 'fire',  pic: '🔥', lv: 1 },
+    { ch: '山', en: 'mountain', pic: '⛰️', lv: 1 },
+    { ch: '木', en: 'tree',  pic: '🌳', lv: 1 },
+    { ch: '口', en: 'mouth', pic: '👄', lv: 1 },
+    { ch: '手', en: 'hand',  pic: '✋', lv: 1 },
+    { ch: '人', en: 'person', pic: '🚶', lv: 1 },
+    { ch: '大', en: 'big',   pic: '',   lv: 1 },
+    { ch: '小', en: 'small', pic: '',   lv: 1 },
+    /* level 2 — more words */
+    { ch: '四', en: 'four',  pic: '4️⃣', lv: 2 },
+    { ch: '五', en: 'five',  pic: '5️⃣', lv: 2 },
+    { ch: '狗', en: 'dog',   pic: '🐶', lv: 2 },
+    { ch: '貓', en: 'cat',   pic: '🐱', lv: 2 },
+    { ch: '魚', en: 'fish',  pic: '🐟', lv: 2 },
+    { ch: '鳥', en: 'bird',  pic: '🐦', lv: 2 },
+    { ch: '牛', en: 'cow',   pic: '🐮', lv: 2 },
+    { ch: '馬', en: 'horse', pic: '🐴', lv: 2 },
+    { ch: '羊', en: 'sheep', pic: '🐑', lv: 2 },
+    { ch: '花', en: 'flower', pic: '🌸', lv: 2 },
+    { ch: '雨', en: 'rain',  pic: '🌧️', lv: 2 },
+    { ch: '星', en: 'star',  pic: '⭐', lv: 2 },
+    { ch: '車', en: 'car',   pic: '🚗', lv: 2 },
+    { ch: '家', en: 'home',  pic: '🏠', lv: 2 },
+    { ch: '上', en: 'up',    pic: '',   lv: 2 },
+    { ch: '下', en: 'down',  pic: '',   lv: 2 },
+    { ch: '天', en: 'sky',   pic: '',   lv: 2 },
+    /* level 3 — word master */
+    { ch: '六', en: 'six',   pic: '6️⃣', lv: 3 },
+    { ch: '七', en: 'seven', pic: '7️⃣', lv: 3 },
+    { ch: '八', en: 'eight', pic: '8️⃣', lv: 3 },
+    { ch: '九', en: 'nine',  pic: '9️⃣', lv: 3 },
+    { ch: '十', en: 'ten',   pic: '🔟', lv: 3 },
+    { ch: '兔', en: 'rabbit', pic: '🐰', lv: 3 },
+    { ch: '蟲', en: 'bug',   pic: '🐛', lv: 3 },
+    { ch: '草', en: 'grass', pic: '🌱', lv: 3 },
+    { ch: '雪', en: 'snow',  pic: '❄️', lv: 3 },
+    { ch: '雲', en: 'cloud', pic: '☁️', lv: 3 },
+    { ch: '門', en: 'door',  pic: '🚪', lv: 3 },
+    { ch: '書', en: 'book',  pic: '📖', lv: 3 },
+    { ch: '筆', en: 'pen',   pic: '✏️', lv: 3 },
+    { ch: '蛋', en: 'egg',   pic: '🥚', lv: 3 },
+    { ch: '米', en: 'rice',  pic: '🍚', lv: 3 },
+    { ch: '瓜', en: 'melon', pic: '🍉', lv: 3 },
+    { ch: '目', en: 'eye',   pic: '👀', lv: 3 },
+    { ch: '耳', en: 'ear',   pic: '👂', lv: 3 },
+    { ch: '心', en: 'heart', pic: '❤️', lv: 3 },
+    { ch: '王', en: 'king',  pic: '👑', lv: 3 }
+  ];
+
+  function makeZhQuestion(w, bank, level) {
+    const others = shuffle(bank.filter(x => x.ch !== w.ch).slice());
+    // easier levels lean on pictures; word masters get more listening
+    const r = Math.random();
+    let mode;
+    if (!w.pic) mode = 'listen';
+    else if (level === 1) mode = r < 0.5 ? 'pic' : r < 0.85 ? 'see' : 'listen';
+    else if (level === 2) mode = r < 0.4 ? 'pic' : r < 0.7 ? 'see' : 'listen';
+    else mode = r < 0.25 ? 'pic' : r < 0.5 ? 'see' : 'listen';
+
+    if (mode === 'pic') {
+      // see the character (and hear it) -> tap the matching picture
+      const opts = shuffle([w].concat(others.filter(x => x.pic).slice(0, 3)));
+      return {
+        id: uid(), packId: 'zh-quest', type: 'zhpic',
+        emoji: w.ch, zh: w.ch, en: w.en,
+        text: 'Tap the matching picture!',
+        options: opts.map(x => x.pic),
+        optZh: opts.map(x => x.ch),
+        correct: opts.indexOf(w),
+        time: 20, level
+      };
+    }
+    // hear the word (with or without a picture hint) -> tap the character
+    const opts = shuffle([w].concat(others.slice(0, 3)));
+    return {
+      id: uid(), packId: 'zh-quest', type: 'zh',
+      emoji: mode === 'see' ? w.pic : '👂',
+      zh: w.ch, en: w.en,
+      text: 'Listen and tap the word you hear',
+      options: opts.map(x => x.ch),
+      correct: opts.indexOf(w),
+      time: 22, level
+    };
+  }
+
+  function generateZh(level, n) {
+    const bank = ZH_WORDS.filter(w => w.lv <= level);
+    const picks = shuffle(bank.slice()).slice(0, n);
+    return picks.map(w => makeZhQuestion(w, bank, level));
+  }
+
   /* ---------- players ---------- */
   function getPlayers() {
     try { return JSON.parse(localStorage.getItem(PLAYERS_KEY) || '[]') || []; }
@@ -355,7 +461,7 @@ window.Store = (function () {
     load, save, getPacks, getPack, questionsFor, allQuestions, countFor,
     upsertQuestion, deleteQuestion, addPack, deletePack,
     exportJSON, importJSON, resetDefaults,
-    generateMath, shuffle, shuffleOptions,
+    generateMath, generateZh, shuffle, shuffleOptions,
     getBest, setBest, uid,
     getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
     getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy

@@ -56,13 +56,16 @@ window.Game = (function () {
     if (queue[idx]) { Sfx.tap(); readCurrent(); }
   });
 
+  // Chinese-learning question types (answered by sound + pictures, no reading)
+  function isZhType(q) { return q && (q.type === 'zh' || q.type === 'zhpic'); }
+
   // read the current question aloud, the right way for its type
   function readCurrent() {
     const q = queue[idx];
     if (!q) return;
     clearSpeaking();
-    if (q.type === 'zh') {
-      // listening question: say the Chinese word (no English)
+    if (isZhType(q)) {
+      // character question: say the Chinese word (no English)
       Sfx.speakZh(q.zh || q.options[q.correct] || q.emoji);
     } else if (q.packId === 'chinese' && CJK.test(q.emoji || '')) {
       // meaning question: say the character in Mandarin, then the English Q + options
@@ -304,8 +307,9 @@ window.Game = (function () {
         btn.addEventListener('click', () => answer(i, btn));
         el.answers.appendChild(btn);
       });
-    } else if (q.type === 'zh') {
-      // Chinese listening: tap the character you heard; each speaks in Mandarin
+    } else if (isZhType(q)) {
+      // Chinese: tap the character you heard (zh) or the picture that matches
+      // the character (zhpic); the 🔊 chip says that option in Mandarin
       el.answers.className = 'answer-grid';
       q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
@@ -313,9 +317,10 @@ window.Game = (function () {
         btn.innerHTML = '<span class="zh-opt-char"></span><span class="opt-speak" title="Hear it">🔊</span>';
         btn.querySelector('.zh-opt-char').textContent = opt;
         btn.addEventListener('click', () => answer(i, btn));
+        const say = q.type === 'zhpic' && q.optZh ? q.optZh[i] : opt;
         btn.querySelector('.opt-speak').addEventListener('click', e => {
           e.stopPropagation();
-          if (!locked) { Sfx.stopSpeak(); clearSpeaking(); Sfx.speakZh(String(opt), on => setSpeaking(i, on)); }
+          if (!locked) { Sfx.stopSpeak(); clearSpeaking(); Sfx.speakZh(String(say), on => setSpeaking(i, on)); }
         });
         el.answers.appendChild(btn);
       });
@@ -337,10 +342,10 @@ window.Game = (function () {
       });
     }
 
-    // voice answering: offer the mic only when supported (not on listening qs)
+    // voice answering: offer the mic only when supported (not on Chinese qs)
     cancelListening();
     if (el.listenBtn) {
-      if (Voice.supported() && q.type !== 'zh') { el.listenBtn.classList.remove('hidden'); el.listenBtn.disabled = false; }
+      if (Voice.supported() && !isZhType(q)) { el.listenBtn.classList.remove('hidden'); el.listenBtn.disabled = false; }
       else { el.listenBtn.classList.add('hidden'); }
     }
     setListenState('idle', '');
@@ -492,16 +497,19 @@ window.Game = (function () {
     el.feedback.classList.toggle('wrong', right !== true);
 
     const cq = queue[idx];
-    const isZh = cq && cq.type === 'zh';
+    const isZh = isZhType(cq);
+    // for Chinese questions, reinforce the word: say it in Mandarin, then its
+    // English meaning ("魚 ... fish!") — q.zh is the character even when the
+    // tapped answer was a picture
+    const zhWord = isZh ? (cq.zh || correctText) : '';
     if (right === true) {
       el.fbIcon.textContent = ['🎉', '🌟', '🚀', '💪', '🏆'][Math.floor(Math.random() * 5)];
       el.fbText.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
       el.fbPoints.textContent = '+' + gained + (streak >= 2 ? '   🔥' + streak : '');
       el.fbNext.textContent = 'Next ▶';
-      // listening question: say the word once more in Mandarin to reinforce it
-      if (isZh) setTimeout(() => Sfx.speakZh(correctText), 350);
+      if (isZh) setTimeout(() => Sfx.speakZhEn(zhWord, cq.en), 350);
       // got it right — keep the pace, but Next can skip ahead
-      advanceTimer = setTimeout(next, isZh ? 2200 : 1700);
+      advanceTimer = setTimeout(next, isZh ? 2600 : 1700);
     } else {
       el.fbIcon.textContent = right === false ? '🙈' : '⏰';
       el.fbText.textContent = right === false
@@ -509,8 +517,8 @@ window.Game = (function () {
         : "Time's up!";
       el.fbPoints.innerHTML = 'The answer is: <span class="ans">' + escapeHtml(correctText) + '</span>';
       el.fbNext.textContent = 'Got it ▶';
-      // wrong / timed out — read the answer aloud (in Mandarin for listening qs)
-      if (isZh) setTimeout(() => Sfx.speakZh(correctText), 450);
+      // wrong / timed out — read the answer aloud (in Mandarin for Chinese qs)
+      if (isZh) setTimeout(() => Sfx.speakZhEn(zhWord, cq.en), 450);
       else setTimeout(() => Sfx.speak('The answer is ' + correctText), 450);
     }
   }
@@ -541,10 +549,15 @@ window.Game = (function () {
     const best = Store.getBest(packId);
     el.rBest.textContent = isBest ? '🏅 New high score!' : (best ? 'High score: ' + best : '');
 
-    // prize-machine coins: one per correct answer, plus a star bonus
-    const coinsEarned = correctCount + (stars === 3 ? 5 : stars === 2 ? 2 : 0);
+    // prize-machine coins: one per correct answer, plus a star bonus.
+    // Chinese packs pay double — a little nudge towards learning characters.
+    const zhBonus = packId === 'chinese' || packId === 'zh-quest';
+    let coinsEarned = correctCount + (stars === 3 ? 5 : stars === 2 ? 2 : 0);
+    if (zhBonus) coinsEarned *= 2;
     if (coinsEarned) { Store.addCoins(coinsEarned); Sfx.coin(); }
-    el.rCoins.textContent = coinsEarned ? '💰 +' + coinsEarned + ' coins earned!' : '';
+    el.rCoins.textContent = coinsEarned
+      ? '💰 +' + coinsEarned + ' coins earned!' + (zhBonus ? ' 🀄 ×2 bonus!' : '')
+      : '';
     if (el.rPrizes) el.rPrizes.textContent = '🎁 Prizes · 💰' + Store.getCoins();
 
     const buddy = Store.getBuddy();

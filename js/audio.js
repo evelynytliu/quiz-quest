@@ -118,6 +118,20 @@ window.Sfx = (function () {
     speechSynthesis.speak(u);
   }
 
+  // Say a Chinese word in Mandarin, then its English meaning ("魚 ... fish!").
+  // Used after answering a character question to reinforce the word.
+  function speakZhEn(zhText, enText, onState) {
+    if (!('speechSynthesis' in window) || muted) return;
+    speechSynthesis.cancel();
+    const u = utterZh(zhText);
+    if (typeof onState === 'function') {
+      u.onstart = () => onState(true);
+      u.onend = () => onState(false);
+    }
+    speechSynthesis.speak(u);
+    if (enText) speechSynthesis.speak(utter(String(enText), 0.85));
+  }
+
   // Read the question, then each answer option in order (with a tiny lead-in).
   // onOption(index, isSpeaking) fires as each option is read, so the caller can
   // gently enlarge the matching button while the voice is on it.
@@ -167,5 +181,5 @@ window.Sfx = (function () {
   function setMuted(m) { muted = m; if (m) stopSpeak(); }
 
   return { correct, wrong, tick, beep, go, fanfare, tap, coin, pop, speak, speakList,
-    speakZh, speakChineseMeaning, zhAvailable, stopSpeak, resume, setMuted };
+    speakZh, speakZhEn, speakChineseMeaning, zhAvailable, stopSpeak, resume, setMuted };
 })();
