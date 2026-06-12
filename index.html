@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=20260529c" />
+  <link rel="stylesheet" href="css/styles.css?v=20260612a" />
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
@@ -24,6 +24,10 @@
         <button id="add-player" class="add-player" type="button" title="Add a player" aria-label="Add a player">＋</button>
       </div>
 
+      <button id="open-prizes" class="prize-btn" type="button">🎁 Prize Machine
+        <span class="coin-chip">🪙 <span id="home-coins">0</span></span>
+      </button>
+
       <h2 class="section-title">Choose your challenge</h2>
       <div id="pack-grid" class="pack-grid"><!-- packs injected here --></div>
 
@@ -35,6 +39,7 @@
   <section id="screen-countdown" class="screen">
     <button class="exit-home exit-home--float" type="button" title="Back to home" aria-label="Home">🏠</button>
     <div class="countdown-wrap">
+      <div id="countdown-buddy" class="countdown-buddy hidden"></div>
       <div id="countdown-pack" class="countdown-pack"></div>
       <div id="countdown-number" class="countdown-number">3</div>
     </div>
@@ -78,6 +83,7 @@
   <!-- ============ RESULTS ============ -->
   <section id="screen-results" class="screen">
     <div class="results-wrap">
+      <div id="result-buddy" class="result-buddy hidden"></div>
       <div id="result-stars" class="result-stars">⭐⭐⭐</div>
       <h1 id="result-title" class="result-title">Awesome!</h1>
       <p id="result-line" class="result-line">You got 8 / 10 right</p>
@@ -86,10 +92,34 @@
         <div class="result-score-label">points</div>
       </div>
       <div id="result-best" class="result-best"></div>
+      <div id="result-coins" class="result-coins"></div>
       <div class="results-buttons">
         <button id="play-again" class="big-btn green">🔁 Play again</button>
+        <button id="go-prizes" class="big-btn purple">🎁 Prizes</button>
         <button id="back-home" class="big-btn blue">🏠 Home</button>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ PRIZE MACHINE ============ -->
+  <section id="screen-prizes" class="screen">
+    <div class="prizes-wrap">
+      <header class="prizes-top">
+        <button class="exit-home" type="button" title="Back to home" aria-label="Home">🏠</button>
+        <h1 class="prizes-title">🎁 Prize Machine</h1>
+        <div class="pill coin-pill">🪙 <span id="prize-coins">0</span></div>
+      </header>
+
+      <div class="egg-area">
+        <button id="egg-btn" class="egg-btn" type="button" aria-label="Open the surprise egg">🥚</button>
+        <div id="egg-name" class="egg-name"></div>
+        <div id="egg-rarity" class="egg-rarity"></div>
+        <p id="egg-hint" class="egg-hint"></p>
+      </div>
+
+      <h2 class="section-title">📒 My Sticker Book <span id="sticker-count" class="muted"></span></h2>
+      <p class="sticker-tip">Tap a sticker to make it your quiz buddy!</p>
+      <div id="sticker-grid" class="sticker-grid"></div>
     </div>
   </section>
 
@@ -216,13 +246,14 @@
     </div>
   </section>
 
-  <script src="js/seed.js?v=20260529c"></script>
-  <script src="js/store.js?v=20260529c"></script>
-  <script src="js/audio.js?v=20260529c"></script>
-  <script src="js/voice.js?v=20260529c"></script>
-  <script src="js/confetti.js?v=20260529c"></script>
-  <script src="js/game.js?v=20260529c"></script>
-  <script src="js/editor.js?v=20260529c"></script>
-  <script src="js/main.js?v=20260529c"></script>
+  <script src="js/seed.js?v=20260612a"></script>
+  <script src="js/store.js?v=20260612a"></script>
+  <script src="js/audio.js?v=20260612a"></script>
+  <script src="js/voice.js?v=20260612a"></script>
+  <script src="js/confetti.js?v=20260612a"></script>
+  <script src="js/game.js?v=20260612a"></script>
+  <script src="js/prizes.js?v=20260612a"></script>
+  <script src="js/editor.js?v=20260612a"></script>
+  <script src="js/main.js?v=20260612a"></script>
 </body>
 </html>

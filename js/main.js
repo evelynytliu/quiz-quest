@@ -10,6 +10,7 @@
     countdown: 'screen-countdown',
     quiz: 'screen-quiz',
     results: 'screen-results',
+    prizes: 'screen-prizes',
     parent: 'screen-parent'
   };
 
@@ -23,10 +24,16 @@
   /* ---------- home ---------- */
   function renderHome() {
     const cur = Store.getCurrentPlayer();
+    const buddy = Store.getBuddy();
     const tagline = document.querySelector('.tagline');
     if (tagline) tagline.textContent = cur
-      ? `Hi, ${cur}! 👋  Pick a game and beat your best`
+      ? `Hi, ${cur}! ${buddy || '👋'}  Pick a game and beat your best`
       : 'Pick a game and beat your high score';
+
+    const coins = Store.getCoins();
+    document.getElementById('home-coins').textContent = coins;
+    // wiggle the prize button when there's an egg waiting to be opened
+    document.getElementById('open-prizes').classList.toggle('ready', coins >= Prizes.EGG_COST);
 
     const grid = document.getElementById('pack-grid');
     grid.innerHTML = '';
@@ -130,6 +137,16 @@
     Sfx.tap(); Game.stop(); renderHome(); showScreen('home');
   });
 
+  /* ---------- prize machine ---------- */
+  function openPrizes() {
+    Sfx.resume(); Sfx.tap();
+    Game.stop();
+    Prizes.refresh();
+    showScreen('prizes');
+  }
+  document.getElementById('open-prizes').addEventListener('click', openPrizes);
+  document.getElementById('go-prizes').addEventListener('click', openPrizes);
+
   /* ---------- players ---------- */
   function renderPlayers() {
     const list = document.getElementById('player-list');
@@ -173,6 +190,7 @@
   /* ---------- boot ---------- */
   Store.load();
   Editor.init();
+  Prizes.init();
   renderPlayers();
   renderHome();
   showScreen('home');

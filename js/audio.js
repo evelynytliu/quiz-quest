@@ -42,6 +42,14 @@ window.Sfx = (function () {
     [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.12, 0.25, 'triangle', 0.3));
   }
   function tap() { tone(440, 0, 0.04, 'sine', 0.12); }
+  function coin() {
+    tone(988, 0, 0.08, 'square', 0.22);     // B5
+    tone(1319, 0.08, 0.22, 'square', 0.22); // E6 — classic coin ding
+  }
+  function pop() {
+    tone(330, 0, 0.05, 'square', 0.22);
+    tone(660, 0.05, 0.1, 'sine', 0.18);
+  }
 
   /* ---------- speech ---------- */
   let voice = null;
@@ -158,6 +166,6 @@ window.Sfx = (function () {
   function resume() { const c = ac(); if (c && c.state === 'suspended') c.resume(); }
   function setMuted(m) { muted = m; if (m) stopSpeak(); }
 
-  return { correct, wrong, tick, beep, go, fanfare, tap, speak, speakList,
+  return { correct, wrong, tick, beep, go, fanfare, tap, coin, pop, speak, speakList,
     speakZh, speakChineseMeaning, zhAvailable, stopSpeak, resume, setMuted };
 })();

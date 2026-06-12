@@ -24,6 +24,7 @@ window.Game = (function () {
   const el = {
     cdPack: document.getElementById('countdown-pack'),
     cdNum: document.getElementById('countdown-number'),
+    cdBuddy: document.getElementById('countdown-buddy'),
     progress: document.getElementById('q-progress'),
     timerBar: document.getElementById('timer-bar'),
     timerNum: document.getElementById('timer-num'),
@@ -45,7 +46,10 @@ window.Game = (function () {
     rTitle: document.getElementById('result-title'),
     rLine: document.getElementById('result-line'),
     rScore: document.getElementById('result-score'),
-    rBest: document.getElementById('result-best')
+    rBest: document.getElementById('result-best'),
+    rCoins: document.getElementById('result-coins'),
+    rBuddy: document.getElementById('result-buddy'),
+    rPrizes: document.getElementById('go-prizes')
   };
 
   el.speakBtn.addEventListener('click', () => {
@@ -228,6 +232,9 @@ window.Game = (function () {
     const who = Store.getCurrentPlayer();
     el.cdPack.textContent = (pack ? pack.emoji + ' ' + pack.name : '')
       + (who ? ' — ' + who + ', Get Ready!' : ' — Get Ready!');
+    const buddy = Store.getBuddy();
+    el.cdBuddy.textContent = buddy;
+    el.cdBuddy.classList.toggle('hidden', !buddy);
     showScreen('countdown');
     let n = 3;
     el.cdNum.textContent = n;
@@ -444,6 +451,11 @@ window.Game = (function () {
       correctCount++;
       Sfx.correct();
       Confetti.burst(40);
+      // streak milestones get an extra emoji shower
+      if (streak >= 3) {
+        const ems = streak >= 7 ? ['🔥', '⭐', '⚡'] : streak >= 5 ? ['🔥', '⚡'] : ['🔥'];
+        Confetti.emojiBurst(ems, 8 + streak * 2);
+      }
     } else {
       streak = 0;
       Sfx.wrong();
@@ -529,9 +541,20 @@ window.Game = (function () {
     const best = Store.getBest(packId);
     el.rBest.textContent = isBest ? '🏅 New high score!' : (best ? 'High score: ' + best : '');
 
+    // prize-machine coins: one per correct answer, plus a star bonus
+    const coinsEarned = correctCount + (stars === 3 ? 5 : stars === 2 ? 2 : 0);
+    if (coinsEarned) { Store.addCoins(coinsEarned); Sfx.coin(); }
+    el.rCoins.textContent = coinsEarned ? '🪙 +' + coinsEarned + ' coins earned!' : '';
+    if (el.rPrizes) el.rPrizes.textContent = '🎁 Prizes · 🪙' + Store.getCoins();
+
+    const buddy = Store.getBuddy();
+    el.rBuddy.textContent = buddy;
+    el.rBuddy.classList.toggle('hidden', !buddy);
+
     showScreen('results');
     Sfx.fanfare();
     if (stars >= 2) { Confetti.rain(120); setTimeout(() => Confetti.rain(80), 600); }
+    if (stars === 3) Confetti.emojiBurst(['⭐', '🌟'], 16);
   }
 
   function escapeHtml(s) {

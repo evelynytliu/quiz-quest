@@ -4,7 +4,7 @@ window.Confetti = (function () {
   const ctx = canvas.getContext('2d');
   let pieces = [];
   let raf = null;
-  const COLORS = ['#a85a4d', '#4e6b7a', '#9c7838', '#5f7850', '#c2a25a', '#b5703f', '#7a8b6a'];
+  const COLORS = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93', '#ff924c', '#52d1dc', '#ff7ab6'];
 
   function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
   window.addEventListener('resize', resize);
@@ -46,6 +46,26 @@ window.Confetti = (function () {
     if (!raf) loop();
   }
 
+  // a shower of emoji (🔥⭐✨...) — for streaks and rare prizes
+  function emojiBurst(emojis, count, originY) {
+    const cx = window.innerWidth / 2;
+    const cy = originY != null ? originY : window.innerHeight * 0.35;
+    for (let i = 0; i < count; i++) {
+      pieces.push({
+        x: cx + (Math.random() - 0.5) * 240,
+        y: cy + (Math.random() - 0.5) * 60,
+        vx: (Math.random() - 0.5) * 8,
+        vy: Math.random() * -10 - 4,
+        size: Math.random() * 12 + 18,
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+        rot: (Math.random() - 0.5) * 0.6,
+        vr: (Math.random() - 0.5) * 0.2,
+        life: 1
+      });
+    }
+    if (!raf) loop();
+  }
+
   function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     pieces.forEach(p => {
@@ -57,8 +77,15 @@ window.Confetti = (function () {
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      if (p.emoji) {
+        ctx.font = p.size + 'px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.emoji, 0, 0);
+      } else {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      }
       ctx.restore();
     });
     pieces = pieces.filter(p => p.life > 0);
@@ -66,5 +93,5 @@ window.Confetti = (function () {
     else { ctx.clearRect(0, 0, canvas.width, canvas.height); raf = null; }
   }
 
-  return { burst, rain };
+  return { burst, rain, emojiBurst };
 })();

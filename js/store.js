@@ -8,6 +8,9 @@ window.Store = (function () {
   const CURRENT_KEY = 'milesQuiz.current.v1'; // the active player's name
   const SEEDED_KEY = 'milesQuiz.seeded.v1';   // signatures of seed questions already merged
   const SEEDED_PACKS_KEY = 'milesQuiz.seededPacks.v1';
+  const COINS_KEY = 'milesQuiz.coins.v1';     // prize-machine coins, per player
+  const STICKERS_KEY = 'milesQuiz.stickers.v1'; // collected stickers, per player
+  const BUDDY_KEY = 'milesQuiz.buddy.v1';     // chosen buddy sticker, per player
 
   let data = null;
 
@@ -269,6 +272,10 @@ window.Store = (function () {
     savePlayers(getPlayers().filter(n => n !== name));
     const all = allBest();
     if (all[name]) { delete all[name]; saveBest(all); }       // drop their scores too
+    [COINS_KEY, STICKERS_KEY, BUDDY_KEY].forEach(k => {       // and their prizes
+      const o = readJSON(k, {});
+      if (o[name] != null) { delete o[name]; writeJSON(k, o); }
+    });
     if (getCurrentPlayer() === name) setCurrentPlayer(getPlayers()[0] || '');
   }
   // one-time migration from the old single-name + global-score scheme
@@ -290,6 +297,41 @@ window.Store = (function () {
     } else {
       savePlayers([]);
     }
+  }
+
+  /* ---------- coins / stickers / buddy (prize machine, per player) ---------- */
+  function readJSON(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key) || 'null') || fallback; }
+    catch (e) { return fallback; }
+  }
+  function writeJSON(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+  }
+  // coins should still work before any player is added
+  function playerKey() { return getCurrentPlayer() || '★'; }
+
+  function getCoins() { return readJSON(COINS_KEY, {})[playerKey()] || 0; }
+  function addCoins(n) {
+    const all = readJSON(COINS_KEY, {});
+    const k = playerKey();
+    all[k] = Math.max(0, (all[k] || 0) + n);
+    writeJSON(COINS_KEY, all);
+    return all[k];
+  }
+  function getStickers() { return readJSON(STICKERS_KEY, {})[playerKey()] || {}; }
+  function addSticker(emoji) {
+    const all = readJSON(STICKERS_KEY, {});
+    const k = playerKey();
+    all[k] = all[k] || {};
+    all[k][emoji] = (all[k][emoji] || 0) + 1;
+    writeJSON(STICKERS_KEY, all);
+    return all[k][emoji];
+  }
+  function getBuddy() { return readJSON(BUDDY_KEY, {})[playerKey()] || ''; }
+  function setBuddy(emoji) {
+    const all = readJSON(BUDDY_KEY, {});
+    all[playerKey()] = emoji || '';
+    writeJSON(BUDDY_KEY, all);
   }
 
   /* ---------- best scores (per player) ---------- */
@@ -315,6 +357,7 @@ window.Store = (function () {
     exportJSON, importJSON, resetDefaults,
     generateMath, shuffle, shuffleOptions,
     getBest, setBest, uid,
-    getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer
+    getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
+    getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy
   };
 })();
