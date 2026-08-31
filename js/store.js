@@ -275,11 +275,19 @@ window.Store = (function () {
     { ch: '牛', en: 'cow',   pic: '🐮', lv: 2 },
     { ch: '馬', en: 'horse', pic: '🐴', lv: 2 },
     { ch: '羊', en: 'sheep', pic: '🐑', lv: 2 },
+    { ch: '豬', en: 'pig',   pic: '🐷', lv: 2 },
+    { ch: '雞', en: 'chicken', pic: '🐔', lv: 2 },
+    { ch: '鴨', en: 'duck',  pic: '🦆', lv: 2 },
+    { ch: '熊', en: 'bear',  pic: '🐻', lv: 2 },
+    { ch: '虎', en: 'tiger', pic: '🐯', lv: 2 },
     { ch: '花', en: 'flower', pic: '🌸', lv: 2 },
     { ch: '雨', en: 'rain',  pic: '🌧️', lv: 2 },
     { ch: '星', en: 'star',  pic: '⭐', lv: 2 },
     { ch: '車', en: 'car',   pic: '🚗', lv: 2 },
     { ch: '家', en: 'home',  pic: '🏠', lv: 2 },
+    { ch: '球', en: 'ball',  pic: '⚽', lv: 2 },
+    { ch: '果', en: 'fruit', pic: '🍎', lv: 2 },
+    { ch: '好', en: 'good',  pic: '👍', lv: 2 },
     { ch: '上', en: 'up',    pic: '',   lv: 2 },
     { ch: '下', en: 'down',  pic: '',   lv: 2 },
     { ch: '天', en: 'sky',   pic: '',   lv: 2 },
@@ -303,8 +311,33 @@ window.Store = (function () {
     { ch: '目', en: 'eye',   pic: '👀', lv: 3 },
     { ch: '耳', en: 'ear',   pic: '👂', lv: 3 },
     { ch: '心', en: 'heart', pic: '❤️', lv: 3 },
-    { ch: '王', en: 'king',  pic: '👑', lv: 3 }
+    { ch: '王', en: 'king',  pic: '👑', lv: 3 },
+    { ch: '象', en: 'elephant', pic: '🐘', lv: 3 },
+    { ch: '猴', en: 'monkey', pic: '🐵', lv: 3 },
+    { ch: '龍', en: 'dragon', pic: '🐉', lv: 3 },
+    { ch: '蛇', en: 'snake', pic: '🐍', lv: 3 },
+    { ch: '龜', en: 'turtle', pic: '🐢', lv: 3 },
+    { ch: '蝶', en: 'butterfly', pic: '🦋', lv: 3 },
+    { ch: '茶', en: 'tea',   pic: '🍵', lv: 3 },
+    { ch: '肉', en: 'meat',  pic: '🍖', lv: 3 },
+    { ch: '電', en: 'electricity', pic: '⚡', lv: 3 },
+    { ch: '風', en: 'wind',  pic: '🌬️', lv: 3 },
+    { ch: '燈', en: 'lamp',  pic: '💡', lv: 3 },
+    { ch: '白', en: 'white', pic: '⚪', lv: 3 },
+    { ch: '黑', en: 'black', pic: '⚫', lv: 3 },
+    { ch: '紅', en: 'red',   pic: '🔴', lv: 3 },
+    { ch: '藍', en: 'blue',  pic: '🔵', lv: 3 },
+    { ch: '鞋', en: 'shoe',  pic: '👟', lv: 3 },
+    { ch: '愛', en: 'love',  pic: '💖', lv: 3 }
   ];
+
+  /* characters that sound exactly the same (mù) — keep them out of each
+     other's answer rows in the sound-based modes, where the ear can't
+     tell them apart */
+  const ZH_HOMOPHONES = [['木', '目']];
+  function zhSameSound(a, b) {
+    return ZH_HOMOPHONES.some(g => g.indexOf(a) >= 0 && g.indexOf(b) >= 0);
+  }
 
   function makeZhQuestion(w, bank, level) {
     const others = shuffle(bank.filter(x => x.ch !== w.ch).slice());
@@ -329,8 +362,15 @@ window.Store = (function () {
         time: 20, level
       };
     }
-    // hear the word (with or without a picture hint) -> tap the character
-    const opts = shuffle([w].concat(others.slice(0, 3)));
+    // hear the word (with or without a picture hint) -> tap the character;
+    // every option has a 🔊 chip, so no two options may sound the same
+    const picked = [w];
+    for (const x of others) {
+      if (picked.length >= 4) break;
+      if (picked.some(p => zhSameSound(p.ch, x.ch))) continue;
+      picked.push(x);
+    }
+    const opts = shuffle(picked);
     return {
       id: uid(), packId: 'zh-quest', type: 'zh',
       emoji: mode === 'see' ? w.pic : '👂',
