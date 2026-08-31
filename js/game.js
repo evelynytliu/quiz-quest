@@ -277,7 +277,8 @@ window.Game = (function () {
 
     // ----- question visual -----
     const isCJK = q.emoji && /[㐀-鿿぀-ヿ가-힯]/.test(q.emoji);
-    el.qEmoji.className = 'q-emoji' + (isCJK ? ' cjk-char' : '');
+    const isCJKWord = isCJK && Array.from(q.emoji).length > 1;   // 兩個字的詞 needs a wider, smaller tile
+    el.qEmoji.className = 'q-emoji' + (isCJK ? ' cjk-char' : '') + (isCJKWord ? ' cjk-word' : '');
     if (q.math) {
       el.qEmoji.textContent = ['🚀', '🌟', '🧠', '🤖', '🎯', '🦖', '🍩', '⚡'][Math.floor(Math.random() * 8)];
       el.qText.innerHTML = renderMath(q.math, q.level);
@@ -315,7 +316,9 @@ window.Game = (function () {
         const btn = document.createElement('button');
         btn.className = 'answer-btn zh-opt a' + i;
         btn.innerHTML = '<span class="zh-opt-char"></span><span class="opt-speak" title="Hear it">🔊</span>';
-        btn.querySelector('.zh-opt-char').textContent = opt;
+        const chSpan = btn.querySelector('.zh-opt-char');
+        chSpan.textContent = opt;
+        if (q.type === 'zh' && Array.from(opt).length > 1) chSpan.classList.add('zh-opt-word');
         btn.addEventListener('click', () => answer(i, btn));
         const say = q.type === 'zhpic' && q.optZh ? q.optZh[i] : opt;
         btn.querySelector('.opt-speak').addEventListener('click', e => {
@@ -551,7 +554,7 @@ window.Game = (function () {
 
     // prize-machine coins: one per correct answer, plus a star bonus.
     // Chinese packs pay double — a little nudge towards learning characters.
-    const zhBonus = packId === 'chinese' || packId === 'zh-quest';
+    const zhBonus = packId === 'chinese' || packId === 'zh-quest' || packId === 'zh-words';
     let coinsEarned = correctCount + (stars === 3 ? 5 : stars === 2 ? 2 : 0);
     if (zhBonus) coinsEarned *= 2;
     if (coinsEarned) { Store.addCoins(coinsEarned); Sfx.coin(); }

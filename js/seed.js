@@ -11,7 +11,8 @@ window.SEED = {
     { id: 'world',     name: 'Cool Facts',      emoji: '🌍', color: 'a5' },
     { id: 'dinos',     name: 'Dino Land',       emoji: '🦖', color: 'a2' },
     { id: 'chinese',   name: 'First Chinese 中文', emoji: '🀄', color: 'a6' },
-    { id: 'zh-quest',  name: 'Character Quest 認字', emoji: '🐉', color: 'a4', generated: true }
+    { id: 'zh-quest',  name: 'Character Quest 認字', emoji: '🐉', color: 'a4', generated: true },
+    { id: 'zh-words',  name: 'Word Quest 詞語', emoji: '🐼', color: 'a5', generated: true }
   ],
   questions: [
     /* ---------------- SCIENCE LAB (Mark Rober vibes) ---------------- */

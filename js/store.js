@@ -339,7 +339,77 @@ window.Store = (function () {
     return ZH_HOMOPHONES.some(g => g.indexOf(a) >= 0 && g.indexOf(b) >= 0);
   }
 
-  function makeZhQuestion(w, bank, level) {
+  /* ---------- word quest: two-character words ----------
+     Same three game modes as Character Quest, but with 詞語 instead of
+     single characters. Two-character words all sound different from each
+     other, so Mandarin's many homophones stop being a problem — and kids
+     learn characters the way they're actually used. */
+  const ZH_WORDS2 = [
+    /* level 1 — first words */
+    { ch: '太陽', en: 'sun',      pic: '☀️', lv: 1 },
+    { ch: '月亮', en: 'moon',     pic: '🌙', lv: 1 },
+    { ch: '星星', en: 'star',     pic: '⭐', lv: 1 },
+    { ch: '小狗', en: 'dog',      pic: '🐶', lv: 1 },
+    { ch: '小貓', en: 'cat',      pic: '🐱', lv: 1 },
+    { ch: '小鳥', en: 'bird',     pic: '🐦', lv: 1 },
+    { ch: '大象', en: 'elephant', pic: '🐘', lv: 1 },
+    { ch: '老虎', en: 'tiger',    pic: '🐯', lv: 1 },
+    { ch: '兔子', en: 'rabbit',   pic: '🐰', lv: 1 },
+    { ch: '火車', en: 'train',    pic: '🚂', lv: 1 },
+    { ch: '汽車', en: 'car',      pic: '🚗', lv: 1 },
+    { ch: '蘋果', en: 'apple',    pic: '🍎', lv: 1 },
+    { ch: '香蕉', en: 'banana',   pic: '🍌', lv: 1 },
+    { ch: '雨傘', en: 'umbrella', pic: '☔', lv: 1 },
+    { ch: '房子', en: 'house',    pic: '🏠', lv: 1 },
+    /* level 2 — more words */
+    { ch: '恐龍', en: 'dinosaur', pic: '🦖', lv: 2 },
+    { ch: '熊貓', en: 'panda',    pic: '🐼', lv: 2 },
+    { ch: '猴子', en: 'monkey',   pic: '🐵', lv: 2 },
+    { ch: '鴨子', en: 'duck',     pic: '🦆', lv: 2 },
+    { ch: '青蛙', en: 'frog',     pic: '🐸', lv: 2 },
+    { ch: '烏龜', en: 'turtle',   pic: '🐢', lv: 2 },
+    { ch: '蜜蜂', en: 'bee',      pic: '🐝', lv: 2 },
+    { ch: '飛機', en: 'airplane', pic: '✈️', lv: 2 },
+    { ch: '下雨', en: 'rain',     pic: '🌧️', lv: 2 },
+    { ch: '雪人', en: 'snowman',  pic: '⛄', lv: 2 },
+    { ch: '彩虹', en: 'rainbow',  pic: '🌈', lv: 2 },
+    { ch: '眼睛', en: 'eyes',     pic: '👀', lv: 2 },
+    { ch: '耳朵', en: 'ear',      pic: '👂', lv: 2 },
+    { ch: '鼻子', en: 'nose',     pic: '👃', lv: 2 },
+    { ch: '嘴巴', en: 'mouth',    pic: '👄', lv: 2 },
+    { ch: '牛奶', en: 'milk',     pic: '🥛', lv: 2 },
+    { ch: '雞蛋', en: 'egg',      pic: '🥚', lv: 2 },
+    { ch: '西瓜', en: 'watermelon', pic: '🍉', lv: 2 },
+    { ch: '草莓', en: 'strawberry', pic: '🍓', lv: 2 },
+    { ch: '麵包', en: 'bread',    pic: '🍞', lv: 2 },
+    /* level 3 — word master */
+    { ch: '蝴蝶', en: 'butterfly', pic: '🦋', lv: 3 },
+    { ch: '蜘蛛', en: 'spider',   pic: '🕷️', lv: 3 },
+    { ch: '鯊魚', en: 'shark',    pic: '🦈', lv: 3 },
+    { ch: '海豚', en: 'dolphin',  pic: '🐬', lv: 3 },
+    { ch: '企鵝', en: 'penguin',  pic: '🐧', lv: 3 },
+    { ch: '獅子', en: 'lion',     pic: '🦁', lv: 3 },
+    { ch: '斑馬', en: 'zebra',    pic: '🦓', lv: 3 },
+    { ch: '火山', en: 'volcano',  pic: '🌋', lv: 3 },
+    { ch: '地球', en: 'Earth',    pic: '🌍', lv: 3 },
+    { ch: '火箭', en: 'rocket',   pic: '🚀', lv: 3 },
+    { ch: '足球', en: 'soccer ball', pic: '⚽', lv: 3 },
+    { ch: '籃球', en: 'basketball', pic: '🏀', lv: 3 },
+    { ch: '電話', en: 'telephone', pic: '📞', lv: 3 },
+    { ch: '電燈', en: 'lamp',     pic: '💡', lv: 3 },
+    { ch: '電視', en: 'TV',       pic: '📺', lv: 3 },
+    { ch: '書包', en: 'backpack', pic: '🎒', lv: 3 },
+    { ch: '鉛筆', en: 'pencil',   pic: '✏️', lv: 3 },
+    { ch: '剪刀', en: 'scissors', pic: '✂️', lv: 3 },
+    { ch: '帽子', en: 'hat',      pic: '🎩', lv: 3 },
+    { ch: '鞋子', en: 'shoes',    pic: '👟', lv: 3 },
+    { ch: '皇冠', en: 'crown',    pic: '👑', lv: 3 },
+    { ch: '禮物', en: 'present',  pic: '🎁', lv: 3 },
+    { ch: '蛋糕', en: 'cake',     pic: '🎂', lv: 3 },
+    { ch: '糖果', en: 'candy',    pic: '🍬', lv: 3 }
+  ];
+
+  function makeZhQuestion(w, bank, level, packId) {
     const others = shuffle(bank.filter(x => x.ch !== w.ch).slice());
     // easier levels lean on pictures; word masters get more listening
     const r = Math.random();
@@ -350,10 +420,10 @@ window.Store = (function () {
     else mode = r < 0.25 ? 'pic' : r < 0.5 ? 'see' : 'listen';
 
     if (mode === 'pic') {
-      // see the character (and hear it) -> tap the matching picture
+      // see the word (and hear it) -> tap the matching picture
       const opts = shuffle([w].concat(others.filter(x => x.pic).slice(0, 3)));
       return {
-        id: uid(), packId: 'zh-quest', type: 'zhpic',
+        id: uid(), packId, type: 'zhpic',
         emoji: w.ch, zh: w.ch, en: w.en,
         text: 'Tap the matching picture!',
         options: opts.map(x => x.pic),
@@ -362,7 +432,7 @@ window.Store = (function () {
         time: 20, level
       };
     }
-    // hear the word (with or without a picture hint) -> tap the character;
+    // hear the word (with or without a picture hint) -> tap the word;
     // every option has a 🔊 chip, so no two options may sound the same
     const picked = [w];
     for (const x of others) {
@@ -372,7 +442,7 @@ window.Store = (function () {
     }
     const opts = shuffle(picked);
     return {
-      id: uid(), packId: 'zh-quest', type: 'zh',
+      id: uid(), packId, type: 'zh',
       emoji: mode === 'see' ? w.pic : '👂',
       zh: w.ch, en: w.en,
       text: 'Listen and tap the word you hear',
@@ -385,7 +455,13 @@ window.Store = (function () {
   function generateZh(level, n) {
     const bank = ZH_WORDS.filter(w => w.lv <= level);
     const picks = shuffle(bank.slice()).slice(0, n);
-    return picks.map(w => makeZhQuestion(w, bank, level));
+    return picks.map(w => makeZhQuestion(w, bank, level, 'zh-quest'));
+  }
+
+  function generateZhWords(level, n) {
+    const bank = ZH_WORDS2.filter(w => w.lv <= level);
+    const picks = shuffle(bank.slice()).slice(0, n);
+    return picks.map(w => makeZhQuestion(w, bank, level, 'zh-words'));
   }
 
   /* ---------- players ---------- */
@@ -501,7 +577,7 @@ window.Store = (function () {
     load, save, getPacks, getPack, questionsFor, allQuestions, countFor,
     upsertQuestion, deleteQuestion, addPack, deletePack,
     exportJSON, importJSON, resetDefaults,
-    generateMath, generateZh, shuffle, shuffleOptions,
+    generateMath, generateZh, generateZhWords, shuffle, shuffleOptions,
     getBest, setBest, uid,
     getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
     getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy

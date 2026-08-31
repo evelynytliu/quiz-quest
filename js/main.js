@@ -4,6 +4,7 @@
   const ROUND_SIZE = 10;
   let pendingMathLevel = null;
   let pendingZhLevel = null;
+  let pendingZhwLevel = null;
   let gateAnswer = 0;
 
   const screens = {
@@ -59,7 +60,9 @@
     if (!pack) return;
     if (pack.generated) {
       // generated packs ask for a level first
-      if (packId === 'zh-quest') openZhModal(); else openMathModal();
+      if (packId === 'zh-quest') openZhModal();
+      else if (packId === 'zh-words') openZhwModal();
+      else openMathModal();
       return;
     }
     let qs = Store.questionsFor(packId).slice();
@@ -81,19 +84,27 @@
     Game.start('zh-quest', qs);
   }
 
+  function startZhWords(level) {
+    const qs = Store.generateZhWords(level, ROUND_SIZE);
+    Game.stop();
+    Game.start('zh-words', qs);
+  }
+
   function replay() {
     const pid = Game.currentPack();
     const pack = Store.getPack(pid);
     if (pack && pack.generated) {
       if (pid === 'zh-quest') startZhQuest(pendingZhLevel || 1);
+      else if (pid === 'zh-words') startZhWords(pendingZhwLevel || 1);
       else startMath(pendingMathLevel || 2);
     }
     else { launchPack(pid); }
   }
 
-  /* ---------- level modals (math machine / character quest) ---------- */
+  /* ---------- level modals (math machine / character & word quests) ---------- */
   function openMathModal() { document.getElementById('math-modal').classList.remove('hidden'); }
   function openZhModal() { document.getElementById('zh-modal').classList.remove('hidden'); }
+  function openZhwModal() { document.getElementById('zhw-modal').classList.remove('hidden'); }
   function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
   document.querySelectorAll('#math-modal .level-btn').forEach(btn => {
@@ -111,6 +122,15 @@
       pendingZhLevel = parseInt(btn.dataset.level, 10);
       closeModal('zh-modal');
       startZhQuest(pendingZhLevel);
+    });
+  });
+
+  document.querySelectorAll('#zhw-modal .level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      Sfx.tap();
+      pendingZhwLevel = parseInt(btn.dataset.level, 10);
+      closeModal('zhw-modal');
+      startZhWords(pendingZhwLevel);
     });
   });
 

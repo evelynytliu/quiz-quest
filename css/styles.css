@@ -205,6 +205,12 @@ body{
   background:linear-gradient(150deg,var(--c-red),#c83a26);border-radius:22px;
   box-shadow:var(--shadow-sm);
 }
+/* two-character words: a wider tile with smaller characters */
+.q-emoji.cjk-char.cjk-word{
+  font-size:clamp(3.4rem,13vw,5.4rem);
+  width:auto;max-width:min(92vw,340px);padding:0 clamp(18px,5vw,30px);
+  letter-spacing:.06em;white-space:nowrap;
+}
 
 /* ----- lively but refined math layout ----- */
 .m-objects{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;margin:6px 0 16px}
@@ -287,6 +293,8 @@ body{
   font-size:clamp(2.8rem,11vw,4.2rem);
   font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',var(--font-body);
 }
+/* two-character word options need smaller type to fit the tile */
+.zh-opt-char.zh-opt-word{font-size:clamp(1.7rem,6.5vw,2.6rem);white-space:nowrap}
 
 /* big O / X buttons for True / False questions */
 .tf-btn{
