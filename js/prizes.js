@@ -58,18 +58,42 @@ window.Prizes = (function () {
   const WEIGHT = { 1: 6, 2: 3, 3: 2 };   // generous odds — it's for a 6-year-old
   const RARITY = { 1: '⭐ Common', 2: '⭐⭐ Rare', 3: '⭐⭐⭐ Super Rare' };
 
-  let opening = false;
+  // idle -> dispensing (knob turns, capsule drops) -> ready (tap to open) -> idle
+  let phase = 'idle';
+  let prize = null;        // the sticker inside the current capsule
   let resetTimer = null;
 
   const el = {
     coins: document.getElementById('prize-coins'),
-    egg: document.getElementById('egg-btn'),
+    machine: document.getElementById('gacha-machine'),
+    balls: document.getElementById('gacha-balls'),
+    knob: document.getElementById('gacha-knob'),
+    drop: document.getElementById('gacha-drop'),
+    capsule: document.getElementById('gacha-capsule'),
+    capSticker: document.getElementById('cap-sticker'),
+    price: document.getElementById('gacha-price'),
     name: document.getElementById('egg-name'),
     rarity: document.getElementById('egg-rarity'),
     hint: document.getElementById('egg-hint'),
     count: document.getElementById('sticker-count'),
     grid: document.getElementById('sticker-grid')
   };
+
+  // a domeful of colourful capsule balls, laid out once
+  const BALL_COLORS = ['#ec5f49', '#4f88d6', '#f3c64c', '#3aa86a', '#9a6bd0', '#f08cae'];
+  function fillDome() {
+    if (!el.balls || el.balls.childElementCount) return;
+    for (let i = 0; i < 14; i++) {
+      const b = document.createElement('span');
+      b.className = 'gacha-ball';
+      const c1 = BALL_COLORS[i % BALL_COLORS.length];
+      b.style.background = `linear-gradient(160deg, ${c1} 50%, #fffdf8 50%)`;
+      b.style.setProperty('--jig', (Math.random() * 0.6 + 0.7).toFixed(2) + 's');
+      b.style.left = (4 + (i % 5) * 19 + Math.random() * 4) + '%';
+      b.style.bottom = (2 + Math.floor(i / 5) * 26 + Math.random() * 8) + '%';
+      el.balls.appendChild(b);
+    }
+  }
 
   function pick() {
     let total = 0;
@@ -86,7 +110,7 @@ window.Prizes = (function () {
 
   function renderHint() {
     el.hint.textContent = Store.getCoins() >= EGG_COST
-      ? 'Tap the egg to crack it open!'
+      ? 'Turn the knob to get a capsule! 轉轉看！'
       : 'You need 💰' + EGG_COST + ' — play a quiz to earn more coins!';
   }
 
@@ -125,64 +149,103 @@ window.Prizes = (function () {
     });
   }
 
-  function resetEgg() {
+  function resetMachine() {
     clearTimeout(resetTimer);
-    el.egg.classList.remove('wobble', 'reveal', 'deny');
-    el.egg.textContent = '🥚';
-    opening = false;
+    phase = 'idle';
+    prize = null;
+    el.machine.classList.remove('shaking', 'deny');
+    el.knob.classList.remove('turning');
+    el.drop.classList.add('hidden');
+    el.drop.classList.remove('falling');
+    el.capsule.classList.add('hidden');
+    el.capsule.classList.remove('landed', 'open', 'r2', 'r3');
+    el.capSticker.textContent = '';
   }
 
-  function openEgg() {
-    if (opening) return;
+  // step 1: turn the knob — a capsule rattles down the chute
+  function turnKnob() {
+    if (phase !== 'idle') return;
     if (Store.getCoins() < EGG_COST) {
-      el.egg.classList.remove('deny'); void el.egg.offsetWidth; el.egg.classList.add('deny');
+      el.machine.classList.remove('deny'); void el.machine.offsetWidth; el.machine.classList.add('deny');
       Sfx.wrong();
       renderHint();
       return;
     }
-    opening = true;
+    phase = 'dispensing';
     el.name.textContent = '';
     el.rarity.textContent = '';
+    el.rarity.className = 'egg-rarity';
     Store.addCoins(-EGG_COST);
-    renderCoins(); renderHint();
-    el.egg.classList.remove('deny', 'reveal');
-    el.egg.classList.add('wobble');
-    Sfx.beep(); setTimeout(() => Sfx.beep(), 320); setTimeout(() => Sfx.beep(), 640);
+    renderCoins();
+    el.hint.textContent = '🌀 Rrrrr… here it comes!';
 
+    prize = pick();
+    el.knob.classList.add('turning');
+    el.machine.classList.add('shaking');
+    Sfx.beep(); setTimeout(() => Sfx.beep(), 300); setTimeout(() => Sfx.beep(), 600);
+
+    // the capsule appears in the chute and drops
     setTimeout(() => {
-      const s = pick();
-      const isNew = Store.addSticker(s.e) === 1;
-      if (!isNew) Store.addCoins(DUP_REFUND);
-      el.egg.classList.remove('wobble');
-      el.egg.classList.add('reveal');
-      el.egg.textContent = s.e;
-      el.name.textContent = isNew ? '✨ New! ' + s.n : s.n + ' again! +💰' + DUP_REFUND + ' back';
-      el.rarity.textContent = RARITY[s.r];
-      el.rarity.className = 'egg-rarity r' + s.r;
+      el.drop.className = 'gacha-drop r' + prize.r;
+      el.drop.classList.add('falling');
+      Sfx.pop();
+    }, 750);
+
+    // then rolls out as a big capsule, ready to open
+    setTimeout(() => {
+      el.knob.classList.remove('turning');
+      el.machine.classList.remove('shaking');
+      el.drop.classList.add('hidden');
+      el.capsule.className = 'gacha-capsule landed r' + prize.r;
+      el.capSticker.textContent = '';
+      el.hint.textContent = '👆 Tap the capsule to open it!';
       Sfx.coin();
-      if (s.r === 3) {
-        Sfx.fanfare();
-        Confetti.rain(110);
-        Confetti.emojiBurst(['✨', '🌟'], 18);
-      } else {
-        Confetti.burst(s.r === 2 ? 70 : 45, window.innerHeight * 0.32);
-      }
-      Sfx.speak(isNew ? 'Wow! You got a ' + s.n + '!' : 'Another ' + s.n + '!');
-      renderCoins(); renderGrid(); renderHint();
-      // give the reveal a moment, then the egg is ready again
-      resetTimer = setTimeout(resetEgg, 1900);
-    }, 1100);
+      phase = 'ready';
+    }, 1500);
+  }
+
+  // step 2: tap the capsule — it cracks open and the sticker pops out
+  function openCapsule() {
+    if (phase !== 'ready' || !prize) return;
+    phase = 'open';
+    const s = prize;
+    const isNew = Store.addSticker(s.e) === 1;
+    if (!isNew) Store.addCoins(DUP_REFUND);
+    el.capSticker.textContent = s.e;
+    el.capsule.classList.add('open');
+    el.name.textContent = isNew ? '✨ New! ' + s.n : s.n + ' again! +💰' + DUP_REFUND + ' back';
+    el.rarity.textContent = RARITY[s.r];
+    el.rarity.className = 'egg-rarity r' + s.r;
+    Sfx.coin();
+    if (s.r === 3) {
+      Sfx.fanfare();
+      Confetti.rain(110);
+      Confetti.emojiBurst(['✨', '🌟'], 18);
+    } else {
+      Confetti.burst(s.r === 2 ? 70 : 45, window.innerHeight * 0.32);
+    }
+    Sfx.speak(isNew ? 'Wow! You got a ' + s.n + '!' : 'Another ' + s.n + '!');
+    renderCoins(); renderGrid(); renderHint();
+    // admire the sticker, then the machine is ready again
+    resetTimer = setTimeout(resetMachine, 2300);
   }
 
   function refresh() {
-    resetEgg();
+    resetMachine();
+    fillDome();
     el.name.textContent = '';
     el.rarity.textContent = '';
     renderCoins(); renderGrid(); renderHint();
   }
 
   function init() {
-    el.egg.addEventListener('click', () => { Sfx.resume(); openEgg(); });
+    fillDome();
+    el.knob.addEventListener('click', () => { Sfx.resume(); turnKnob(); });
+    el.machine.addEventListener('click', (e) => {
+      if (e.target === el.knob || el.knob.contains(e.target)) return;
+      Sfx.resume(); turnKnob();
+    });
+    el.capsule.addEventListener('click', () => { Sfx.resume(); openCapsule(); });
   }
 
   return { init, refresh, EGG_COST };

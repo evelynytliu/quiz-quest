@@ -5,6 +5,7 @@
   let pendingMathLevel = null;
   let pendingZhLevel = null;
   let pendingZhwLevel = null;
+  let pendingZhsLevel = null;
   let gateAnswer = 0;
 
   const screens = {
@@ -13,6 +14,7 @@
     quiz: 'screen-quiz',
     results: 'screen-results',
     prizes: 'screen-prizes',
+    write: 'screen-write',
     parent: 'screen-parent'
   };
 
@@ -37,20 +39,27 @@
     // wiggle the prize button when there's an egg waiting to be opened
     document.getElementById('open-prizes').classList.toggle('ready', coins >= Prizes.EGG_COST);
 
-    const grid = document.getElementById('pack-grid');
-    grid.innerHTML = '';
+    // two labeled shelves — Chinese games and English games look different
+    // so a pre-reader can tell them apart at a glance
+    const grids = {
+      zh: document.getElementById('pack-grid-zh'),
+      en: document.getElementById('pack-grid-en')
+    };
+    grids.zh.innerHTML = ''; grids.en.innerHTML = '';
     Store.getPacks().forEach(p => {
       const count = Store.countFor(p.id);
       if (!p.generated && count === 0) return; // hide empty custom packs
+      const lang = p.lang === 'zh' ? 'zh' : 'en';
       const card = document.createElement('button');
-      card.className = 'pack-card ' + (p.color || 'a1');
-      const sub = p.generated ? '∞ endless' : count + ' question' + (count === 1 ? '' : 's');
+      card.className = 'pack-card ' + (p.color || 'a1') + (lang === 'zh' ? ' zh-card' : '');
+      const sub = p.id === 'zh-write' ? '✍️ trace & learn'
+        : p.generated ? '∞ endless' : count + ' question' + (count === 1 ? '' : 's');
       const best = Store.getBest(p.id);
       card.innerHTML = `<span class="p-emoji">${p.emoji}</span>
         <span class="p-name">${escapeHtml(p.name)}</span>
         <span class="p-count">${sub}${best ? ' · 🏅' + best : ''}</span>`;
       card.addEventListener('click', () => { Sfx.resume(); Sfx.tap(); launchPack(p.id); });
-      grid.appendChild(card);
+      grids[lang].appendChild(card);
     });
   }
 
@@ -62,6 +71,8 @@
       // generated packs ask for a level first
       if (packId === 'zh-quest') openZhModal();
       else if (packId === 'zh-words') openZhwModal();
+      else if (packId === 'zh-sentences') openZhsModal();
+      else if (packId === 'zh-write') { Writer.open(); return; }
       else openMathModal();
       return;
     }
@@ -90,21 +101,29 @@
     Game.start('zh-words', qs);
   }
 
+  function startZhSentences(level) {
+    const qs = Store.generateZhSentences(level, ROUND_SIZE);
+    Game.stop();
+    Game.start('zh-sentences', qs);
+  }
+
   function replay() {
     const pid = Game.currentPack();
     const pack = Store.getPack(pid);
     if (pack && pack.generated) {
       if (pid === 'zh-quest') startZhQuest(pendingZhLevel || 1);
       else if (pid === 'zh-words') startZhWords(pendingZhwLevel || 1);
+      else if (pid === 'zh-sentences') startZhSentences(pendingZhsLevel || 1);
       else startMath(pendingMathLevel || 2);
     }
     else { launchPack(pid); }
   }
 
-  /* ---------- level modals (math machine / character & word quests) ---------- */
+  /* ---------- level modals (math machine / Chinese quests) ---------- */
   function openMathModal() { document.getElementById('math-modal').classList.remove('hidden'); }
   function openZhModal() { document.getElementById('zh-modal').classList.remove('hidden'); }
   function openZhwModal() { document.getElementById('zhw-modal').classList.remove('hidden'); }
+  function openZhsModal() { document.getElementById('zhs-modal').classList.remove('hidden'); }
   function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
   document.querySelectorAll('#math-modal .level-btn').forEach(btn => {
@@ -131,6 +150,15 @@
       pendingZhwLevel = parseInt(btn.dataset.level, 10);
       closeModal('zhw-modal');
       startZhWords(pendingZhwLevel);
+    });
+  });
+
+  document.querySelectorAll('#zhs-modal .level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      Sfx.tap();
+      pendingZhsLevel = parseInt(btn.dataset.level, 10);
+      closeModal('zhs-modal');
+      startZhSentences(pendingZhsLevel);
     });
   });
 
@@ -235,6 +263,7 @@
   Store.load();
   Editor.init();
   Prizes.init();
+  Writer.init();
   renderPlayers();
   renderHome();
   showScreen('home');

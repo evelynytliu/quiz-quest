@@ -277,8 +277,10 @@ window.Game = (function () {
 
     // ----- question visual -----
     const isCJK = q.emoji && /[㐀-鿿぀-ヿ가-힯]/.test(q.emoji);
-    const isCJKWord = isCJK && Array.from(q.emoji).length > 1;   // 兩個字的詞 needs a wider, smaller tile
-    el.qEmoji.className = 'q-emoji' + (isCJK ? ' cjk-char' : '') + (isCJKWord ? ' cjk-word' : '');
+    const cjkLen = isCJK ? Array.from(q.emoji).length : 0;
+    // 1 char: big square tile · 2 chars: wide tile · 3+ chars: sentence banner
+    el.qEmoji.className = 'q-emoji' + (isCJK ? ' cjk-char' : '')
+      + (cjkLen > 1 ? ' cjk-word' : '') + (cjkLen > 2 ? ' cjk-sent' : '');
     if (q.math) {
       el.qEmoji.textContent = ['🚀', '🌟', '🧠', '🤖', '🎯', '🦖', '🍩', '⚡'][Math.floor(Math.random() * 8)];
       el.qText.innerHTML = renderMath(q.math, q.level);
@@ -318,7 +320,11 @@ window.Game = (function () {
         btn.innerHTML = '<span class="zh-opt-char"></span><span class="opt-speak" title="Hear it">🔊</span>';
         const chSpan = btn.querySelector('.zh-opt-char');
         chSpan.textContent = opt;
-        if (q.type === 'zh' && Array.from(opt).length > 1) chSpan.classList.add('zh-opt-word');
+        // count visible symbols, ignoring emoji variation selectors / joiners
+        const optLen = Array.from(opt.replace(/[\uFE0E\uFE0F\u200D]/g, '')).length;
+        if (q.type === 'zh' && optLen > 1) chSpan.classList.add('zh-opt-word');
+        if (q.type === 'zh' && optLen > 4) chSpan.classList.add('zh-opt-sent');
+        if (q.type === 'zhpic' && optLen > 1) chSpan.classList.add('zh-pic-multi');
         btn.addEventListener('click', () => answer(i, btn));
         const say = q.type === 'zhpic' && q.optZh ? q.optZh[i] : opt;
         btn.querySelector('.opt-speak').addEventListener('click', e => {
@@ -554,7 +560,8 @@ window.Game = (function () {
 
     // prize-machine coins: one per correct answer, plus a star bonus.
     // Chinese packs pay double — a little nudge towards learning characters.
-    const zhBonus = packId === 'chinese' || packId === 'zh-quest' || packId === 'zh-words';
+    const zhBonus = packId === 'chinese' || packId === 'zh-quest'
+      || packId === 'zh-words' || packId === 'zh-sentences';
     let coinsEarned = correctCount + (stars === 3 ? 5 : stars === 2 ? 2 : 0);
     if (zhBonus) coinsEarned *= 2;
     if (coinsEarned) { Store.addCoins(coinsEarned); Sfx.coin(); }

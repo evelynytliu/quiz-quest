@@ -11,6 +11,7 @@ window.Store = (function () {
   const COINS_KEY = 'milesQuiz.coins.v1';     // prize-machine coins, per player
   const STICKERS_KEY = 'milesQuiz.stickers.v1'; // collected stickers, per player
   const BUDDY_KEY = 'milesQuiz.buddy.v1';     // chosen buddy sticker, per player
+  const WRITE_KEY = 'milesQuiz.write.v1';     // Write Quest stars, per player
 
   let data = null;
 
@@ -29,8 +30,20 @@ window.Store = (function () {
       save();
     }
     mergeSeed();      // pull in any new default questions/packs added since last time
+    removeRetiredPacks();
     migratePlayers();
     return data;
+  }
+
+  // default packs that were retired from the seed: clear them off devices
+  // that still carry them (questions included)
+  function removeRetiredPacks() {
+    const gone = (window.SEED && window.SEED.removedPacks) || [];
+    if (!gone.length) return;
+    const before = data.packs.length + data.questions.length;
+    data.packs = data.packs.filter(p => gone.indexOf(p.id) < 0);
+    data.questions = data.questions.filter(q => gone.indexOf(q.packId) < 0);
+    if (data.packs.length + data.questions.length !== before) save();
   }
 
   function save() {
@@ -464,6 +477,94 @@ window.Store = (function () {
     return picks.map(w => makeZhQuestion(w, bank, level, 'zh-words'));
   }
 
+  /* ---------- silly sentences: funny short sentences for new readers ----------
+     Humour is the hook: a pig dancing or a snowman sipping hot tea makes a
+     5-7 year old want to know what the sentence says. Pictures are little
+     emoji scenes; every sentence is read aloud in Mandarin. */
+  const ZH_SENTS = [
+    /* level 1 — short & simple */
+    { ch: '貓咪愛魚',   en: 'The kitty loves fish',        pic: '🐱🐟', lv: 1 },
+    { ch: '狗狗開車',   en: 'The doggy drives a car',      pic: '🐶🚗', lv: 1 },
+    { ch: '豬在跳舞',   en: 'The pig is dancing',          pic: '🐷💃', lv: 1 },
+    { ch: '熊貓吃飯',   en: 'The panda eats rice',         pic: '🐼🍚', lv: 1 },
+    { ch: '魚會飛',     en: 'The fish can fly',            pic: '🐟✈️', lv: 1 },
+    { ch: '兔子唱歌',   en: 'The bunny sings a song',      pic: '🐰🎤', lv: 1 },
+    { ch: '老虎刷牙',   en: 'The tiger brushes its teeth', pic: '🐯🦷', lv: 1 },
+    { ch: '雞在看書',   en: 'The chicken is reading',      pic: '🐔📖', lv: 1 },
+    { ch: '馬吃蛋糕',   en: 'The horse eats cake',         pic: '🐴🎂', lv: 1 },
+    { ch: '下雨了',     en: 'It is raining',               pic: '🌧️☂️', lv: 1 },
+    { ch: '鴨子游泳',   en: 'The duck is swimming',        pic: '🦆🌊', lv: 1 },
+    { ch: '熊在睡覺',   en: 'The bear is sleeping',        pic: '🐻💤', lv: 1 },
+    /* level 2 — a little longer */
+    { ch: '恐龍打籃球', en: 'The dinosaur plays basketball', pic: '🦖🏀', lv: 2 },
+    { ch: '大象坐火車', en: 'The elephant rides the train',  pic: '🐘🚂', lv: 2 },
+    { ch: '獅子怕老鼠', en: 'The lion is scared of the mouse', pic: '🦁🐭', lv: 2 },
+    { ch: '猴子開飛機', en: 'The monkey flies a plane',      pic: '🐵✈️', lv: 2 },
+    { ch: '青蛙跳很高', en: 'The frog jumps very high',      pic: '🐸⬆️', lv: 2 },
+    { ch: '雪人喝熱茶', en: 'The snowman drinks hot tea',    pic: '⛄🍵', lv: 2 },
+    { ch: '星星眨眼睛', en: 'The stars are blinking',        pic: '🌟👀', lv: 2 },
+    { ch: '烏龜跑得快', en: 'The turtle runs fast',          pic: '🐢💨', lv: 2 },
+    { ch: '小狗愛洗澡', en: 'The puppy loves baths',         pic: '🐶🛁', lv: 2 },
+    { ch: '貓咪打電話', en: 'The kitty makes a phone call',  pic: '🐱📞', lv: 2 },
+    { ch: '蜜蜂住城堡', en: 'The bee lives in a castle',     pic: '🐝🏰', lv: 2 },
+    { ch: '熊愛吃蜂蜜', en: 'The bear loves honey',          pic: '🐻🍯', lv: 2 },
+    { ch: '鯊魚愛吃糖', en: 'The shark loves candy',         pic: '🦈🍬', lv: 2 },
+    /* level 3 — the silliest ones */
+    { ch: '章魚穿八隻鞋', en: 'The octopus wears eight shoes',  pic: '🐙👟', lv: 3 },
+    { ch: '企鵝去海邊玩', en: 'The penguin goes to the beach',  pic: '🐧🏖️', lv: 3 },
+    { ch: '月亮吃了餅乾', en: 'The moon ate a cookie',          pic: '🌙🍪', lv: 3 },
+    { ch: '太陽戴墨鏡',   en: 'The sun wears sunglasses',       pic: '☀️🕶️', lv: 3 },
+    { ch: '恐龍害怕打針', en: 'The dinosaur is scared of shots', pic: '🦖💉', lv: 3 },
+    { ch: '火箭飛到月亮', en: 'The rocket flies to the moon',   pic: '🚀🌕', lv: 3 },
+    { ch: '小貓當國王',   en: 'The kitten becomes king',        pic: '🐱👑', lv: 3 },
+    { ch: '熊貓抱西瓜',   en: 'The panda hugs a watermelon',    pic: '🐼🍉', lv: 3 },
+    { ch: '機器人會唱歌', en: 'The robot can sing',             pic: '🤖🎵', lv: 3 },
+    { ch: '恐龍賣冰淇淋', en: 'The dinosaur sells ice cream',   pic: '🦖🍦', lv: 3 },
+    { ch: '聖誕老人游泳', en: 'Santa goes swimming',            pic: '🎅🌊', lv: 3 },
+    { ch: '青蛙王子唱歌', en: 'The frog prince sings',          pic: '🐸👑', lv: 3 }
+  ];
+
+  function makeSentQuestion(s, bank, level) {
+    const others = shuffle(bank.filter(x => x.ch !== s.ch).slice());
+    // young readers get mostly picture-matching; older ones read the sentences
+    const r = Math.random();
+    let mode;
+    if (level === 1) mode = r < 0.65 ? 'pic' : 'see';
+    else if (level === 2) mode = r < 0.45 ? 'pic' : r < 0.9 ? 'see' : 'listen';
+    else mode = r < 0.3 ? 'pic' : r < 0.7 ? 'see' : 'listen';
+
+    if (mode === 'pic') {
+      // read (and hear) the sentence -> tap the matching little scene
+      const opts = shuffle([s].concat(others.slice(0, 3)));
+      return {
+        id: uid(), packId: 'zh-sentences', type: 'zhpic',
+        emoji: s.ch, zh: s.ch, en: s.en,
+        text: 'Tap the matching picture!',
+        options: opts.map(x => x.pic),
+        optZh: opts.map(x => x.ch),
+        correct: opts.indexOf(s),
+        time: 25, level
+      };
+    }
+    // hear the sentence (with or without its scene) -> tap the sentence
+    const opts = shuffle([s].concat(others.slice(0, 3)));
+    return {
+      id: uid(), packId: 'zh-sentences', type: 'zh',
+      emoji: mode === 'see' ? s.pic : '👂',
+      zh: s.ch, en: s.en,
+      text: 'Listen and tap the sentence you hear',
+      options: opts.map(x => x.ch),
+      correct: opts.indexOf(s),
+      time: 26, level
+    };
+  }
+
+  function generateZhSentences(level, n) {
+    const bank = ZH_SENTS.filter(s => s.lv <= level);
+    const picks = shuffle(bank.slice()).slice(0, n);
+    return picks.map(s => makeSentQuestion(s, bank, level));
+  }
+
   /* ---------- players ---------- */
   function getPlayers() {
     try { return JSON.parse(localStorage.getItem(PLAYERS_KEY) || '[]') || []; }
@@ -494,7 +595,7 @@ window.Store = (function () {
     savePlayers(getPlayers().filter(n => n !== name));
     const all = allBest();
     if (all[name]) { delete all[name]; saveBest(all); }       // drop their scores too
-    [COINS_KEY, STICKERS_KEY, BUDDY_KEY].forEach(k => {       // and their prizes
+    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY].forEach(k => {   // and their prizes
       const o = readJSON(k, {});
       if (o[name] != null) { delete o[name]; writeJSON(k, o); }
     });
@@ -556,6 +657,17 @@ window.Store = (function () {
     writeJSON(BUDDY_KEY, all);
   }
 
+  /* ---------- Write Quest stars (per player, capped at 3 per character) ---------- */
+  function getWriteStars() { return readJSON(WRITE_KEY, {})[playerKey()] || {}; }
+  function addWriteStar(ch) {
+    const all = readJSON(WRITE_KEY, {});
+    const k = playerKey();
+    all[k] = all[k] || {};
+    all[k][ch] = Math.min(3, (all[k][ch] || 0) + 1);
+    writeJSON(WRITE_KEY, all);
+    return all[k][ch];
+  }
+
   /* ---------- best scores (per player) ---------- */
   function allBest() { try { return JSON.parse(localStorage.getItem(SCORE_KEY) || '{}'); } catch (e) { return {}; } }
   function saveBest(all) { try { localStorage.setItem(SCORE_KEY, JSON.stringify(all)); } catch (e) {} }
@@ -577,9 +689,10 @@ window.Store = (function () {
     load, save, getPacks, getPack, questionsFor, allQuestions, countFor,
     upsertQuestion, deleteQuestion, addPack, deletePack,
     exportJSON, importJSON, resetDefaults,
-    generateMath, generateZh, generateZhWords, shuffle, shuffleOptions,
+    generateMath, generateZh, generateZhWords, generateZhSentences, shuffle, shuffleOptions,
     getBest, setBest, uid,
     getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
-    getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy
+    getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy,
+    getWriteStars, addWriteStar
   };
 })();

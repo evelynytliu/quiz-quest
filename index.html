@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Quiz Quest!</title>
+  <meta name="theme-color" content="#ec5f49" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -29,7 +32,14 @@
       </button>
 
       <h2 class="section-title">Choose your challenge</h2>
-      <div id="pack-grid" class="pack-grid"><!-- packs injected here --></div>
+      <section class="lang-section lang-zh">
+        <h3 class="lang-title"><span class="lang-badge zh">中</span> 中文遊戲 <small>Chinese</small></h3>
+        <div id="pack-grid-zh" class="pack-grid"><!-- Chinese packs injected --></div>
+      </section>
+      <section class="lang-section lang-en">
+        <h3 class="lang-title"><span class="lang-badge en">ABC</span> English &amp; Math</h3>
+        <div id="pack-grid-en" class="pack-grid"><!-- English packs injected --></div>
+      </section>
 
       <button id="open-parent" class="parent-btn" title="Grown-ups only">🔒 Grown-ups</button>
     </div>
@@ -111,7 +121,31 @@
       </header>
 
       <div class="egg-area">
-        <button id="egg-btn" class="egg-btn" type="button" aria-label="Open the surprise egg">🥚</button>
+        <!-- the gacha machine: coins go in, the knob turns, a capsule pops out -->
+        <div id="gacha-machine" class="gacha-machine" aria-label="Capsule toy machine">
+          <div class="gacha-dome">
+            <div id="gacha-balls" class="gacha-balls"><!-- capsule balls injected --></div>
+            <div class="gacha-shine"></div>
+          </div>
+          <div class="gacha-body">
+            <div class="gacha-price">💰 <span id="gacha-price">10</span></div>
+            <button id="gacha-knob" class="gacha-knob" type="button" aria-label="Turn the knob to get a capsule">
+              <span class="knob-bar"></span>
+            </button>
+            <div class="gacha-chute">
+              <span id="gacha-drop" class="gacha-drop hidden"></span>
+            </div>
+            <div class="gacha-feet"></div>
+          </div>
+        </div>
+
+        <!-- the capsule you got: tap it to crack it open -->
+        <button id="gacha-capsule" class="gacha-capsule hidden" type="button" aria-label="Open your capsule">
+          <span id="cap-sticker" class="cap-sticker"></span>
+          <span class="cap-top"></span>
+          <span class="cap-bottom"></span>
+        </button>
+
         <div id="egg-name" class="egg-name"></div>
         <div id="egg-rarity" class="egg-rarity"></div>
         <p id="egg-hint" class="egg-hint"></p>
@@ -120,6 +154,39 @@
       <h2 class="section-title">📒 My Sticker Book <span id="sticker-count" class="muted"></span></h2>
       <p class="sticker-tip">Tap a sticker to make it your quiz buddy!</p>
       <div id="sticker-grid" class="sticker-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============ WRITE QUEST 寫字 ============ -->
+  <section id="screen-write" class="screen">
+    <div class="write-wrap">
+      <header class="write-top">
+        <button class="exit-home" type="button" title="Back to home" aria-label="Home">🏠</button>
+        <h1 class="write-title">✍️ Write Quest 寫字</h1>
+        <div class="pill coin-pill">💰 <span id="write-coins">0</span></div>
+      </header>
+
+      <div id="write-picker">
+        <p class="write-hint">Pick a character and learn to write it! 選一個字來寫寫看</p>
+        <div id="write-grid" class="write-grid"><!-- character tiles injected --></div>
+      </div>
+
+      <div id="write-practice" class="hidden">
+        <button id="write-back" class="ghost-btn write-back-btn">← All characters 換一個字</button>
+        <div class="write-stage">
+          <div class="write-info">
+            <div id="write-char-label" class="write-char-label">水</div>
+            <div id="write-word" class="write-word">💧 water</div>
+            <div id="write-stars" class="write-stars">☆☆☆</div>
+          </div>
+          <div id="write-target" class="write-target"></div>
+          <div id="write-msg" class="write-msg" aria-live="polite"></div>
+          <div class="write-actions">
+            <button id="write-watch" class="big-btn blue">👀 Watch 看筆順</button>
+            <button id="write-go" class="big-btn green">✍️ My turn! 換我寫</button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -161,6 +228,20 @@
         <button class="level-btn" data-level="1">🐣 First Words<br><small>15 easy words 入門詞</small></button>
         <button class="level-btn" data-level="2">🦊 More Words<br><small>35 words 更多詞</small></button>
         <button class="level-btn" data-level="3">🐉 Word Master<br><small>all 59 words 全部的詞</small></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SILLY SENTENCES LEVEL PICKER (modal) ============ -->
+  <div id="zhs-modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" data-close="zhs-modal">✕</button>
+      <h2>😜 Silly Sentences 短句</h2>
+      <p>Funny little sentences — listen, giggle, and tap!</p>
+      <div class="level-buttons">
+        <button class="level-btn" data-level="1">🐣 First Sentences<br><small>12 easy ones 入門句</small></button>
+        <button class="level-btn" data-level="2">🦊 More Sentences<br><small>25 sentences 更多句</small></button>
+        <button class="level-btn" data-level="3">🐉 Sentence Master<br><small>all 37 句子大師</small></button>
       </div>
     </div>
   </div>
@@ -274,12 +355,15 @@
     </div>
   </section>
 
+  <script src="js/vendor/hanzi-writer.min.js?v=20260831a"></script>
+  <script src="js/zh-strokes.js?v=20260831a"></script>
   <script src="js/seed.js?v=20260831a"></script>
   <script src="js/store.js?v=20260831a"></script>
   <script src="js/audio.js?v=20260831a"></script>
   <script src="js/voice.js?v=20260831a"></script>
   <script src="js/confetti.js?v=20260831a"></script>
   <script src="js/game.js?v=20260831a"></script>
+  <script src="js/write.js?v=20260831a"></script>
   <script src="js/prizes.js?v=20260831a"></script>
   <script src="js/editor.js?v=20260831a"></script>
   <script src="js/main.js?v=20260831a"></script>

@@ -1,0 +1,13 @@
+{
+  "name": "Quiz Quest",
+  "short_name": "Quiz Quest",
+  "description": "A playful quiz adventure for young learners — Chinese, English, math, and a capsule-toy prize machine.",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#faf3e7",
+  "theme_color": "#ec5f49",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
