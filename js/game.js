@@ -59,6 +59,31 @@ window.Game = (function () {
   // Chinese-learning question types (answered by sound + pictures, no reading)
   function isZhType(q) { return q && (q.type === 'zh' || q.type === 'zhpic'); }
 
+  /* ---------- karaoke: light up a sentence's characters one by one ----------
+     While a sentence is being spoken, each character grows and glows in turn,
+     pulling young eyes off the emoji and onto the characters themselves. */
+  let karaokeTimer = null;
+  const KARAOKE_MS = 480;             // roughly the pace of the slowed TTS
+  function stopKaraoke() { clearTimeout(karaokeTimer); karaokeTimer = null; }
+  function karaoke(target, text) {
+    stopKaraoke();
+    if (!target) return;
+    target.innerHTML = '';
+    const spans = Array.from(text).map(c => {
+      const s = document.createElement('span');
+      s.className = 'kchar'; s.textContent = c;
+      target.appendChild(s);
+      return s;
+    });
+    let i = 0;
+    const step = () => {
+      spans.forEach((s, j) => s.classList.toggle('lit', j === i));
+      i++;
+      if (i <= spans.length) karaokeTimer = setTimeout(step, KARAOKE_MS);
+    };
+    karaokeTimer = setTimeout(step, 320);   // small lead-in while speech spins up
+  }
+
   // read the current question aloud, the right way for its type
   function readCurrent() {
     const q = queue[idx];
@@ -67,6 +92,8 @@ window.Game = (function () {
     if (isZhType(q)) {
       // character question: say the Chinese word (no English)
       Sfx.speakZh(q.zh || q.options[q.correct] || q.emoji);
+      // a sentence on the big tile follows along character by character
+      if (q.packId === 'zh-sentences' && q.type === 'zhpic') karaoke(el.qEmoji, q.zh);
     } else if (q.packId === 'chinese' && CJK.test(q.emoji || '')) {
       // meaning question: say the character in Mandarin, then the English Q + options
       Sfx.speakChineseMeaning(q.emoji, q.speak || q.text, q.options, setSpeaking);
@@ -339,6 +366,7 @@ window.Game = (function () {
 
   function showQuestion() {
     locked = false;
+    stopKaraoke();
     const q = queue[idx];
     showScreen('quiz');
     el.progress.textContent = (idx + 1) + ' / ' + queue.length;
@@ -598,16 +626,29 @@ window.Game = (function () {
     const isZh = isZhType(cq);
     // for Chinese questions, reinforce the word: say it in Mandarin, then its
     // English meaning ("魚 ... fish!") — q.zh is the character even when the
-    // tapped answer was a picture
+    // tapped answer was a picture. Whole sentences stay Mandarin-only: the
+    // English translation is long, gets cut off, and doesn't help here.
     const zhWord = isZh ? (cq.zh || correctText) : '';
+    const isSentence = cq.packId === 'zh-sentences';
+    const sayAnswer = () => {
+      if (!isSentence) { Sfx.speakZhEn(zhWord, cq.en); return; }
+      Sfx.speakZh(zhWord);
+      // follow the spoken sentence character by character: on the big tile
+      // (picture questions) or on the correct answer button (sentence options)
+      const target = cq.type === 'zhpic'
+        ? el.qEmoji
+        : (el.answers.children[cq.correct] && el.answers.children[cq.correct].querySelector('.zh-opt-char'));
+      karaoke(target, zhWord);
+    };
     if (right === true) {
       el.fbIcon.textContent = ['🎉', '🌟', '🚀', '💪', '🏆'][Math.floor(Math.random() * 5)];
       el.fbText.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
       el.fbPoints.textContent = '+' + gained + (streak >= 2 ? '   🔥' + streak : '');
       el.fbNext.textContent = 'Next ▶';
-      if (isZh) setTimeout(() => Sfx.speakZhEn(zhWord, cq.en), 350);
+      if (isZh) setTimeout(sayAnswer, 350);
       // got it right — keep the pace, but Next can skip ahead
-      advanceTimer = setTimeout(next, isZh ? 2600 : 1700);
+      // (sentences get a touch longer so the whole line is heard)
+      advanceTimer = setTimeout(next, isSentence ? 3300 : isZh ? 2600 : 1700);
     } else {
       el.fbIcon.textContent = right === false ? '🙈' : '⏰';
       el.fbText.textContent = right === false
@@ -616,7 +657,7 @@ window.Game = (function () {
       el.fbPoints.innerHTML = 'The answer is: <span class="ans">' + escapeHtml(correctText) + '</span>';
       el.fbNext.textContent = 'Got it ▶';
       // wrong / timed out — read the answer aloud (in Mandarin for Chinese qs)
-      if (isZh) setTimeout(() => Sfx.speakZhEn(zhWord, cq.en), 450);
+      if (isZh) setTimeout(sayAnswer, 450);
       else setTimeout(() => Sfx.speak('The answer is ' + correctText), 450);
     }
   }
@@ -687,7 +728,7 @@ window.Game = (function () {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  function stop() { clearInterval(timer); clearInterval(countdownTimer); Sfx.stopSpeak(); cancelListening(); cancelEcho(); }
+  function stop() { clearInterval(timer); clearInterval(countdownTimer); clearTimeout(advanceTimer); Sfx.stopSpeak(); cancelListening(); cancelEcho(); stopKaraoke(); }
 
   function currentPack() { return packId; }
 

@@ -61,11 +61,22 @@ window.Sfx = (function () {
     voice = voices.find(v => /en(-|_)?US/i.test(v.lang) && /female|samantha|zira|google us english/i.test(v.name))
          || voices.find(v => /^en/i.test(v.lang))
          || voices[0] || null;
-    // a Mandarin voice for reading Chinese characters aloud (zh-TW preferred)
-    zhVoice = voices.find(v => /^zh(-|_)?(tw|hant)/i.test(v.lang))
-           || voices.find(v => /^zh(-|_)?(cn|hans)/i.test(v.lang))
-           || voices.find(v => /^zh/i.test(v.lang))
-           || voices.find(v => /^(yue|cmn)/i.test(v.lang)) || null;
+    // a Mandarin voice for reading Chinese aloud — devices often carry several
+    // and the first match is usually the most robotic one, so rank them:
+    // Taiwanese Mandarin first, then the natural-sounding voices (downloaded
+    // "enhanced/premium" voices, Siri, Chrome's Google voice), robots last.
+    const zhAll = voices.filter(v => /^(zh|yue|cmn)/i.test(v.lang) || /中文|國語|普通话|台灣|臺灣/i.test(v.name));
+    const zhScore = v => {
+      let s = 0;
+      if (/(-|_)?(tw|hant)/i.test(v.lang) || /台灣|臺灣|國語/i.test(v.name)) s += 40;
+      else if (/(-|_)?(cn|hans)/i.test(v.lang)) s += 20;
+      if (/premium|enhanced|natural|neural|siri/i.test(v.name)) s += 30;
+      if (/google/i.test(v.name)) s += 25;
+      if (/mei-?jia|美佳|yu-?shu|雅婷|yating|shasha|婷婷|tingting/i.test(v.name)) s += 12;
+      if (/eloquence|espeak|compact|novelty/i.test(v.name)) s -= 50;
+      return s;
+    };
+    zhVoice = zhAll.sort((a, b) => zhScore(b) - zhScore(a))[0] || null;
   }
   if ('speechSynthesis' in window) {
     pickVoice();
