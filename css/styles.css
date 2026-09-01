@@ -521,7 +521,8 @@ body{
     linear-gradient(to bottom, transparent calc(50% - 1px), rgba(200,58,38,.12) calc(50% - 1px), rgba(200,58,38,.12) calc(50% + 1px), transparent calc(50% + 1px));
 }
 .write-msg{min-height:1.4em;font-weight:800;color:var(--ink-soft);margin:8px 0 12px}
-.write-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.write-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center}
+#write-next{animation:pop .45s ease;font-size:1.15rem}
 
 .prizes-wrap{max-width:760px;margin:0 auto;text-align:center;padding-top:6px}
 .prizes-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}

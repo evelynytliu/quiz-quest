@@ -37,13 +37,15 @@ window.Writer = (function () {
 
   let writer = null;       // the live hanzi-writer instance
   let current = '';        // character being practised
-  let busy = false;        // demo or quiz in progress
+  let mode = 'idle';       // 'demo' | 'quiz' | 'idle' — the canvas is always
+                           // touchable: touching it during a demo (or after
+                           // finishing) jumps straight into tracing
 
   const el = {};
   function grab() {
     ['write-coins', 'write-picker', 'write-grid', 'write-practice', 'write-back',
      'write-char-label', 'write-word', 'write-stars', 'write-target', 'write-msg',
-     'write-watch', 'write-go'].forEach(id => {
+     'write-watch', 'write-next'].forEach(id => {
       el[id.replace(/-(\w)/g, (_, c) => c.toUpperCase())] = document.getElementById(id);
     });
   }
@@ -111,47 +113,61 @@ window.Writer = (function () {
 
   function setMsg(t) { el.writeMsg.textContent = t || ''; }
 
+  // all characters in map order, so "next" walks the adventure trail
+  const ORDER = [].concat.apply([], ISLANDS.map(i => i.chars));
+  function nextChar() {
+    const i = ORDER.indexOf(current);
+    return i >= 0 && i < ORDER.length - 1 ? ORDER[i + 1] : '';
+  }
+  function showNext(show) {
+    if (!el.writeNext) return;
+    const nx = nextChar();
+    el.writeNext.textContent = nx ? '▶ Next 下一個字：' + nx : '🏁 All done! 回地圖';
+    el.writeNext.classList.toggle('hidden', !show);
+  }
+
   function enter(ch) {
     current = ch;
-    busy = false;
+    mode = 'idle';
     el.writePicker.classList.add('hidden');
     el.writePractice.classList.remove('hidden');
     const m = META[ch] || { en: '', pic: '' };
     el.writeCharLabel.textContent = ch;
     el.writeWord.textContent = (m.pic ? m.pic + ' ' : '') + m.en;
     el.writeStars.textContent = starStr(Store.getWriteStars()[ch] || 0);
+    showNext(false);
     makeWriter(ch);
     Sfx.stopSpeak();
     Sfx.speakZh(ch);
-    setMsg('👀 Watch first, then try it yourself!');
     demo();
   }
 
   function demo() {
-    if (!writer || busy) return;
-    busy = true;
-    writer.cancelQuiz();
-    setMsg('👀 Watch how ' + current + ' is written…');
+    if (!writer) return;
+    mode = 'demo';
+    showNext(false);
+    try { writer.cancelQuiz(); } catch (e) {}
+    setMsg('👀 Watch how ' + current + ' is written — or just start tracing!');
     writer.animateCharacter({
       onComplete: () => {
-        busy = false;
-        writer.hideCharacter();
-        setMsg('✍️ Your turn — tap "My turn!"');
+        // straight into tracing, no button needed
+        if (mode === 'demo') quiz();
       }
     });
   }
 
   function quiz() {
-    if (!writer || busy) return;
-    busy = true;
+    if (!writer) return;
+    mode = 'quiz';
+    showNext(false);
     writer.hideCharacter();
-    setMsg('✍️ Trace each stroke with your finger!');
+    setMsg('✍️ Your turn — trace each stroke with your finger!');
     Sfx.speakZh(current);
     writer.quiz({
       onCorrectStroke: () => Sfx.pop(),
       onMistake: () => Sfx.tap(),
       onComplete: () => {
-        busy = false;
+        mode = 'idle';
         const n = Store.addWriteStar(current);
         const coins = n === 1 ? FIRST_STAR_COINS : REPEAT_COINS;
         Store.addCoins(coins);
@@ -166,13 +182,19 @@ window.Writer = (function () {
         const m = META[current] || {};
         Sfx.speakZhEn(current, m.en);
         renderCoins();
+        showNext(true);            // one tap goes on to the next character
       }
     });
   }
 
+  function goNext() {
+    const nx = nextChar();
+    if (nx) enter(nx); else back();
+  }
+
   function back() {
     if (writer) { try { writer.cancelQuiz(); } catch (e) {} }
-    busy = false;
+    mode = 'idle';
     Sfx.stopSpeak();
     el.writePractice.classList.add('hidden');
     el.writePicker.classList.remove('hidden');
@@ -193,10 +215,18 @@ window.Writer = (function () {
     grab();
     el.writeBack.addEventListener('click', () => { Sfx.tap(); back(); });
     el.writeWatch.addEventListener('click', () => { Sfx.tap(); demo(); });
-    el.writeGo.addEventListener('click', () => { quiz(); });
+    el.writeNext.addEventListener('click', () => { Sfx.tap(); goNext(); });
+    // touching the square is always an invitation to write: it skips the
+    // demo, and after a finished character it starts another round
+    el.writeTarget.addEventListener('pointerdown', () => {
+      if (mode !== 'quiz') quiz();
+    });
     // re-fit the writing square when the tablet is rotated
     window.addEventListener('resize', () => {
-      if (current && !el.writePractice.classList.contains('hidden') && !busy) makeWriter(current);
+      if (current && !el.writePractice.classList.contains('hidden') && mode !== 'quiz') {
+        makeWriter(current);
+        demo();
+      }
     });
   }
 
