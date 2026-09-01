@@ -31,8 +31,20 @@ window.Store = (function () {
     }
     mergeSeed();      // pull in any new default questions/packs added since last time
     removeRetiredPacks();
+    relaxTimes();
     migratePlayers();
     return data;
+  }
+
+  // one-time bump to the relaxed 30-second pace for questions stored before
+  // the change; parents can still tune per-question times in the editor after
+  const TIME30_KEY = 'milesQuiz.time30.v1';
+  function relaxTimes() {
+    try { if (localStorage.getItem(TIME30_KEY)) return; } catch (e) {}
+    let changed = false;
+    data.questions.forEach(q => { if (!q.time || q.time < 30) { q.time = 30; changed = true; } });
+    if (changed) save();
+    try { localStorage.setItem(TIME30_KEY, '1'); } catch (e) {}
   }
 
   // default packs that were retired from the seed: clear them off devices
@@ -247,7 +259,7 @@ window.Store = (function () {
       math: { a, b, op },
       options,
       correct,
-      time: level === 3 ? 25 : 20,
+      time: 30,
       level
     };
   }
@@ -452,7 +464,7 @@ window.Store = (function () {
         options: opts.map(x => x.pic),
         optZh: opts.map(x => x.ch),
         correct: opts.indexOf(w),
-        time: 20, level
+        time: 30, level
       };
     }
     // hear the word (with or without a picture hint) -> tap the word;
@@ -471,7 +483,7 @@ window.Store = (function () {
       text: 'Listen and tap the word you hear',
       options: opts.map(x => x.ch),
       correct: opts.indexOf(w),
-      time: 22, level
+      time: 30, level
     };
   }
 
@@ -553,7 +565,7 @@ window.Store = (function () {
         options: opts.map(x => x.pic),
         optZh: opts.map(x => x.ch),
         correct: opts.indexOf(s),
-        time: 25, level
+        time: 30, level
       };
     }
     // hear the sentence (with or without its scene) -> tap the sentence
@@ -565,7 +577,7 @@ window.Store = (function () {
       text: 'Listen and tap the sentence you hear',
       options: opts.map(x => x.ch),
       correct: opts.indexOf(s),
-      time: 26, level
+      time: 30, level
     };
   }
 

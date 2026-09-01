@@ -463,7 +463,7 @@ window.Game = (function () {
     // auto-read the question aloud (Chinese-aware), kids decode by sound
     setTimeout(readCurrent, 300);
 
-    startTimer(q.time || 20);
+    startTimer(q.time || 30);
     qStart = Date.now();
   }
 
@@ -545,7 +545,7 @@ window.Game = (function () {
     const q = queue[idx];
     const right = choice === q.correct;
     const used = timerUsedSeconds();   // excludes time spent talking/listening
-    const limit = q.time || 20;
+    const limit = q.time || 30;
 
     // disable buttons & reveal
     [...el.answers.children].forEach((b, i) => {
