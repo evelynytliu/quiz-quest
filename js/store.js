@@ -78,6 +78,16 @@ window.Store = (function () {
       seededPacks.add(sp.id);
     });
 
+    // keep default packs' metadata current on devices that stored an older
+    // copy (e.g. the lang tag that shelves Chinese games separately)
+    window.SEED.packs.forEach(sp => {
+      const p = data.packs.find(x => x.id === sp.id);
+      if (!p) return;
+      ['name', 'emoji', 'color', 'lang', 'generated'].forEach(k => {
+        if (sp[k] !== undefined && p[k] !== sp[k]) { p[k] = sp[k]; changed = true; }
+      });
+    });
+
     // new default questions
     const haveSig = new Set(data.questions.map(qSig));
     window.SEED.questions.forEach(sq => {
@@ -595,7 +605,7 @@ window.Store = (function () {
     savePlayers(getPlayers().filter(n => n !== name));
     const all = allBest();
     if (all[name]) { delete all[name]; saveBest(all); }       // drop their scores too
-    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY].forEach(k => {   // and their prizes
+    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY, ACT_KEY, QUEST_KEY].forEach(k => {   // and their data
       const o = readJSON(k, {});
       if (o[name] != null) { delete o[name]; writeJSON(k, o); }
     });
@@ -657,6 +667,88 @@ window.Store = (function () {
     writeJSON(BUDDY_KEY, all);
   }
 
+  /* ---------- activity log (per player, for streaks & the parent report) ---------- */
+  const ACT_KEY = 'milesQuiz.activity.v1';
+  const ACT_CAP = 500;                       // entries kept per player
+
+  function todayStr(offsetDays) {
+    const d = new Date();
+    if (offsetDays) d.setDate(d.getDate() + offsetDays);
+    const p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function pushActivity(entry) {
+    const all = readJSON(ACT_KEY, {});
+    const k = playerKey();
+    all[k] = (all[k] || []).concat([entry]).slice(-ACT_CAP);
+    writeJSON(ACT_KEY, all);
+  }
+  function logRound(packId, ok, total) {
+    pushActivity({ d: todayStr(), kind: 'round', packId, ok, total });
+  }
+  function logWrite(ch) {
+    pushActivity({ d: todayStr(), kind: 'write', ch });
+  }
+  function getActivityFor(name, days) {
+    const all = readJSON(ACT_KEY, {});
+    const list = all[name || playerKey()] || [];
+    const cutoff = todayStr(-(days - 1));
+    return list.filter(e => e.d >= cutoff);
+  }
+  function getActivity(days) { return getActivityFor('', days); }
+  // consecutive days with any play, counting back from today (an empty today
+  // doesn't break the chain — the streak just waits for them)
+  function getPlayStreak() {
+    const list = readJSON(ACT_KEY, {})[playerKey()] || [];
+    const played = new Set(list.map(e => e.d));
+    let streak = 0;
+    let off = played.has(todayStr()) ? 0 : -1;
+    while (played.has(todayStr(off))) { streak++; off--; }
+    return streak;
+  }
+
+  /* ---------- daily quests (per player, reset each day) ---------- */
+  const QUEST_KEY = 'milesQuiz.quests.v1';
+  const QUESTS = [
+    { id: 'zhround', icon: '🀄', label: 'Play a Chinese game 玩一場中文遊戲', goal: 1, reward: 10 },
+    { id: 'write',   icon: '✍️', label: 'Write 3 characters 寫三個字',        goal: 3, reward: 10 },
+    { id: 'correct', icon: '✅', label: 'Get 10 right 答對十題',              goal: 10, reward: 10 }
+  ];
+  function questState() {
+    const all = readJSON(QUEST_KEY, {});
+    let st = all[playerKey()];
+    if (!st || st.date !== todayStr()) st = { date: todayStr(), prog: {}, done: [] };
+    return st;
+  }
+  function saveQuestState(st) {
+    const all = readJSON(QUEST_KEY, {});
+    all[playerKey()] = st;
+    writeJSON(QUEST_KEY, all);
+  }
+  function getQuests() {
+    const st = questState();
+    return QUESTS.map(q => ({
+      id: q.id, icon: q.icon, label: q.label, goal: q.goal, reward: q.reward,
+      prog: Math.min(q.goal, st.prog[q.id] || 0),
+      done: st.done.indexOf(q.id) >= 0
+    }));
+  }
+  // advance a quest; returns the quests completed by this bump (coins already added)
+  function bumpQuest(id, n) {
+    const q = QUESTS.find(x => x.id === id);
+    if (!q || !n) return [];
+    const st = questState();
+    st.prog[id] = (st.prog[id] || 0) + n;
+    const completed = [];
+    if (st.prog[id] >= q.goal && st.done.indexOf(id) < 0) {
+      st.done.push(id);
+      addCoins(q.reward);
+      completed.push(q);
+    }
+    saveQuestState(st);
+    return completed;
+  }
+
   /* ---------- Write Quest stars (per player, capped at 3 per character) ---------- */
   function getWriteStars() { return readJSON(WRITE_KEY, {})[playerKey()] || {}; }
   function addWriteStar(ch) {
@@ -693,6 +785,8 @@ window.Store = (function () {
     getBest, setBest, uid,
     getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
     getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy,
-    getWriteStars, addWriteStar
+    getWriteStars, addWriteStar,
+    logRound, logWrite, getActivity, getActivityFor, getPlayStreak,
+    getQuests, bumpQuest
   };
 })();

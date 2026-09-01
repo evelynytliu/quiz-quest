@@ -27,6 +27,14 @@ window.Writer = (function () {
   const CHARS = Object.keys(window.ZH_STROKES || {});
   const INK = ['#e8472f', '#4f88d6', '#3aa86a', '#9a6bd0', '#e8850c'];
 
+  // the adventure map: characters live on themed islands
+  const ISLANDS = [
+    { name: '數字島 Number Island',   emoji: '🔢', chars: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'] },
+    { name: '自然島 Nature Island',   emoji: '🌋', chars: ['日', '月', '山', '水', '火', '木', '土', '田', '天'] },
+    { name: '小人島 People Island',   emoji: '🚶', chars: ['人', '大', '小', '上', '下', '中'] },
+    { name: '寶貝島 Treasure Island', emoji: '👑', chars: ['口', '手', '心', '王', '子'] }
+  ];
+
   let writer = null;       // the live hanzi-writer instance
   let current = '';        // character being practised
   let busy = false;        // demo or quiz in progress
@@ -47,15 +55,30 @@ window.Writer = (function () {
   function renderGrid() {
     const stars = Store.getWriteStars();
     el.writeGrid.innerHTML = '';
-    CHARS.forEach(ch => {
-      const n = stars[ch] || 0;
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'write-cell' + (n >= 3 ? ' mastered' : n ? ' started' : '');
-      b.innerHTML = '<span class="wc-char">' + ch + '</span>'
-        + '<span class="wc-stars">' + (n ? starStr(n) : '') + '</span>';
-      b.addEventListener('click', () => { Sfx.tap(); enter(ch); });
-      el.writeGrid.appendChild(b);
+    ISLANDS.forEach((island, i) => {
+      const sec = document.createElement('section');
+      sec.className = 'write-island island-' + i;
+      const mastered = island.chars.filter(c => (stars[c] || 0) >= 3).length;
+      const head = document.createElement('div');
+      head.className = 'island-head';
+      head.innerHTML = '<span class="island-emoji">' + island.emoji + '</span>'
+        + '<span class="island-name">' + island.name + '</span>'
+        + '<span class="island-progress">🌟 ' + mastered + ' / ' + island.chars.length + '</span>';
+      sec.appendChild(head);
+      const trail = document.createElement('div');
+      trail.className = 'island-trail';
+      island.chars.forEach(ch => {
+        const n = stars[ch] || 0;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'write-cell' + (n >= 3 ? ' mastered' : n ? ' started' : '');
+        b.innerHTML = '<span class="wc-char">' + ch + '</span>'
+          + '<span class="wc-stars">' + (n ? starStr(n) : '') + '</span>';
+        b.addEventListener('click', () => { Sfx.tap(); enter(ch); });
+        trail.appendChild(b);
+      });
+      sec.appendChild(trail);
+      el.writeGrid.appendChild(sec);
     });
   }
 
@@ -132,11 +155,14 @@ window.Writer = (function () {
         const n = Store.addWriteStar(current);
         const coins = n === 1 ? FIRST_STAR_COINS : REPEAT_COINS;
         Store.addCoins(coins);
+        Store.logWrite(current);
+        const quest = Store.bumpQuest('write', 1);
         Sfx.fanfare(); Sfx.coin();
         Confetti.burst(70, window.innerHeight * 0.4);
         if (n >= 3) Confetti.emojiBurst(['✨', '🌟'], 14);
         el.writeStars.textContent = starStr(n);
-        setMsg((n >= 3 ? '🌟 Mastered! ' : '🎉 Wonderful! ') + '+💰' + coins);
+        setMsg((n >= 3 ? '🌟 Mastered! ' : '🎉 Wonderful! ') + '+💰' + coins
+          + (quest.length ? '  ·  🎯 Daily quest done! +💰' + quest[0].reward : ''));
         const m = META[current] || {};
         Sfx.speakZhEn(current, m.en);
         renderCoins();

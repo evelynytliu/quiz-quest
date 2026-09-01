@@ -39,6 +39,20 @@
     // wiggle the prize button when there's an egg waiting to be opened
     document.getElementById('open-prizes').classList.toggle('ready', coins >= Prizes.EGG_COST);
 
+    // today's quests + play streak
+    const rows = document.getElementById('quest-rows');
+    rows.innerHTML = '';
+    Store.getQuests().forEach(q => {
+      const row = document.createElement('div');
+      row.className = 'quest-row' + (q.done ? ' done' : '');
+      row.innerHTML = `<span class="q-icon">${q.icon}</span>
+        <span class="q-label">${q.label}</span>
+        <span class="q-prog">${q.done ? '✅ +💰' + q.reward : q.prog + ' / ' + q.goal}</span>`;
+      rows.appendChild(row);
+    });
+    const streak = Store.getPlayStreak();
+    document.getElementById('quest-streak').textContent = streak >= 2 ? ` · 🔥 ${streak} days` : '';
+
     // two labeled shelves — Chinese games and English games look different
     // so a pre-reader can tell them apart at a glance
     const grids = {
@@ -182,11 +196,47 @@
   document.getElementById('gate-submit').addEventListener('click', checkGate);
   document.getElementById('gate-answer').addEventListener('keydown', e => { if (e.key === 'Enter') checkGate(); });
 
+  /* ---------- parent weekly report ---------- */
+  function renderReport() {
+    const body = document.getElementById('report-body');
+    if (!body) return;
+    const players = Store.getPlayers();
+    const names = players.length ? players : [''];
+    body.innerHTML = '';
+    names.forEach(name => {
+      const acts = Store.getActivityFor(name, 7);
+      const rounds = acts.filter(a => a.kind === 'round');
+      const writes = acts.filter(a => a.kind === 'write');
+      const zhIds = { chinese: 1, 'zh-quest': 1, 'zh-words': 1, 'zh-sentences': 1 };
+      const zhRounds = rounds.filter(r => zhIds[r.packId]);
+      const ok = rounds.reduce((s, r) => s + (r.ok || 0), 0);
+      const total = rounds.reduce((s, r) => s + (r.total || 0), 0);
+      const days = new Set(acts.map(a => a.d)).size;
+      const chars = {};
+      writes.forEach(w => { chars[w.ch] = (chars[w.ch] || 0) + 1; });
+      const charList = Object.keys(chars).join('、');
+
+      const div = document.createElement('div');
+      div.className = 'report-player';
+      const title = name ? `👦 ${escapeHtml(name)}` : '👦 (未命名玩家)';
+      div.innerHTML = !acts.length
+        ? `<h4>${title}</h4><p class="report-empty">這週還沒有遊玩紀錄</p>`
+        : `<h4>${title} <span class="muted">玩了 ${days} 天</span></h4>
+          <ul class="report-list">
+            <li>🎮 完成 ${rounds.length} 回合（中文 ${zhRounds.length} 回合）</li>
+            <li>✅ 答對率 ${total ? Math.round(ok / total * 100) + '%（' + ok + ' / ' + total + ' 題）' : '—'}</li>
+            <li>✍️ 寫了 ${writes.length} 次字${charList ? '：<span class="report-chars">' + charList + '</span>' : ''}</li>
+          </ul>`;
+      body.appendChild(div);
+    });
+  }
+
   function checkGate() {
     const val = parseInt(document.getElementById('gate-answer').value, 10);
     if (val === gateAnswer) {
       closeModal('gate-modal');
       Editor.refresh();
+      renderReport();
       showScreen('parent');
     } else {
       document.getElementById('gate-error').classList.remove('hidden');

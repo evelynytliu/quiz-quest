@@ -31,6 +31,11 @@
         <span class="coin-chip">💰 <span id="home-coins">0</span></span>
       </button>
 
+      <div id="quest-card" class="quest-card">
+        <div class="quest-head">🎯 Today's Quests 今日任務<span id="quest-streak" class="quest-streak"></span></div>
+        <div id="quest-rows" class="quest-rows"><!-- quest rows injected --></div>
+      </div>
+
       <h2 class="section-title">Choose your challenge</h2>
       <section class="lang-section lang-zh">
         <h3 class="lang-title"><span class="lang-badge zh">中</span> 中文遊戲 <small>Chinese</small></h3>
@@ -74,6 +79,7 @@
       <div class="q-actions">
         <button id="q-speak" class="speak-btn" title="Read it to me">🔊 Hear it again</button>
         <button id="q-listen" class="listen-btn hidden" type="button" title="Say your answer">🎤 Say your answer</button>
+        <button id="q-echo" class="listen-btn echo-btn hidden" type="button" title="Record yourself saying it">🎙️ Say it too! 跟著唸</button>
       </div>
       <div id="q-listen-status" class="listen-status" aria-live="polite"></div>
     </div>
@@ -81,6 +87,7 @@
     <div id="answer-grid" class="answer-grid"><!-- answers injected --></div>
 
     <div id="feedback" class="feedback hidden">
+      <div id="feedback-buddy" class="feedback-buddy hidden"><span id="fb-buddy-emoji"></span><span id="fb-buddy-mood" class="fb-buddy-mood"></span></div>
       <div id="feedback-icon" class="feedback-icon">✅</div>
       <div class="feedback-main">
         <div id="feedback-text" class="feedback-text">Correct!</div>
@@ -103,6 +110,7 @@
       </div>
       <div id="result-best" class="result-best"></div>
       <div id="result-coins" class="result-coins"></div>
+      <div id="result-quests" class="result-quests hidden"></div>
       <div class="results-buttons">
         <button id="play-again" class="big-btn green">🔁 Play again</button>
         <button id="go-prizes" class="big-btn purple">🎁 Prizes</button>
@@ -268,6 +276,11 @@
 
     <div class="parent-body">
       <aside class="parent-side">
+        <div class="card">
+          <h3>📈 學習週報 <span class="muted">(最近 7 天)</span></h3>
+          <div id="report-body" class="report-body"></div>
+        </div>
+
         <div class="card">
           <h3>題庫</h3>
           <div id="pack-manager" class="pack-manager"></div>

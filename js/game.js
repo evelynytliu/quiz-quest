@@ -140,6 +140,76 @@ window.Game = (function () {
 
   if (el.listenBtn) el.listenBtn.addEventListener('click', () => { Sfx.tap(); startListening(); });
 
+  /* ---------- 跟讀: record yourself saying the word, then hear it back ----------
+     Kids love hearing their own voice — it makes them *want* to say the word
+     out loud, which is half the battle of learning to read. */
+  const echoBtn = document.getElementById('q-echo');
+  const ECHO_MS = 2800;                     // recording window
+  let echoState = 'idle';                   // idle | recording | playing
+  let echoRec = null;
+  let echoAudio = null;
+  let echoStopTimer = null;
+  let echoSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+
+  function setEchoLabel() {
+    if (!echoBtn) return;
+    echoBtn.textContent = echoState === 'recording' ? '🔴 Say it now! 唸出來'
+      : echoState === 'playing' ? '👂 That\'s you! 你的聲音'
+      : '🎙️ Say it too! 跟著唸';
+    echoBtn.classList.toggle('listening', echoState === 'recording');
+  }
+
+  function cancelEcho() {
+    clearTimeout(echoStopTimer);
+    if (echoRec && echoRec.state !== 'inactive') { try { echoRec.stop(); } catch (e) {} }
+    if (echoRec && echoRec.stream) echoRec.stream.getTracks().forEach(t => t.stop());
+    echoRec = null;
+    if (echoAudio) { try { echoAudio.pause(); } catch (e) {} echoAudio = null; }
+    if (echoState !== 'idle') { echoState = 'idle'; setEchoLabel(); }
+  }
+
+  function startEcho() {
+    if (locked || echoState === 'playing') return;
+    if (echoState === 'recording') {         // tap again = done early
+      clearTimeout(echoStopTimer);
+      if (echoRec && echoRec.state !== 'inactive') echoRec.stop();
+      return;
+    }
+    Sfx.stopSpeak();
+    pauseTimer();                            // no rush while they practise
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const chunks = [];
+      echoRec = new MediaRecorder(stream);
+      echoRec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      echoRec.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        clearTimeout(echoStopTimer);
+        if (!chunks.length) { echoState = 'idle'; setEchoLabel(); resumeTimer(); return; }
+        const url = URL.createObjectURL(new Blob(chunks));
+        echoState = 'playing'; setEchoLabel();
+        echoAudio = new Audio(url);
+        echoAudio.onended = echoAudio.onerror = () => {
+          URL.revokeObjectURL(url);
+          echoAudio = null;
+          echoState = 'idle'; setEchoLabel();
+          resumeTimer();
+        };
+        echoAudio.play().catch(() => { echoState = 'idle'; setEchoLabel(); resumeTimer(); });
+      };
+      echoState = 'recording'; setEchoLabel();
+      echoRec.start();
+      echoStopTimer = setTimeout(() => { if (echoRec && echoRec.state !== 'inactive') echoRec.stop(); }, ECHO_MS);
+    }).catch(() => {
+      // mic blocked — hide the button for the rest of the session
+      echoSupported = false;
+      echoBtn.classList.add('hidden');
+      if (el.listenStatus) el.listenStatus.textContent = '🎤 Microphone is off — you can still tap and listen!';
+      resumeTimer();
+    });
+  }
+
+  if (echoBtn) echoBtn.addEventListener('click', () => { Sfx.tap(); startEcho(); });
+
   // ----- match spoken words to one of the on-screen options -----
   const NUMWORDS = { zero:'0', one:'1', two:'2', three:'3', four:'4', five:'5', six:'6',
     seven:'7', eight:'8', nine:'9', ten:'10', eleven:'11', twelve:'12', thirteen:'13',
@@ -358,6 +428,9 @@ window.Game = (function () {
       else { el.listenBtn.classList.add('hidden'); }
     }
     setListenState('idle', '');
+    // 跟讀 echo button: Chinese questions only
+    cancelEcho();
+    if (echoBtn) echoBtn.classList.toggle('hidden', !(isZhType(q) && echoSupported));
 
     // auto-read the question aloud (Chinese-aware), kids decode by sound
     setTimeout(readCurrent, 300);
@@ -438,6 +511,7 @@ window.Game = (function () {
     clearInterval(timer);
     Sfx.stopSpeak();
     cancelListening();
+    cancelEcho();
     if (el.listenBtn) el.listenBtn.disabled = true;
     setListenState('idle', '');
     const q = queue[idx];
@@ -483,6 +557,7 @@ window.Game = (function () {
     locked = true;
     Sfx.stopSpeak();
     cancelListening();
+    cancelEcho();
     if (el.listenBtn) el.listenBtn.disabled = true;
     setListenState('idle', '');
     const q = queue[idx];
@@ -504,6 +579,20 @@ window.Game = (function () {
     el.feedback.classList.remove('hidden');
     el.feedback.classList.toggle('correct', right === true);
     el.feedback.classList.toggle('wrong', right !== true);
+
+    // the quiz buddy pops out to cheer (or console)
+    const buddyBox = document.getElementById('feedback-buddy');
+    if (buddyBox) {
+      const buddy = Store.getBuddy();
+      buddyBox.classList.toggle('hidden', !buddy);
+      if (buddy) {
+        document.getElementById('fb-buddy-emoji').textContent = buddy;
+        document.getElementById('fb-buddy-mood').textContent = right === true ? '🎉' : '🤗';
+        buddyBox.classList.remove('cheer', 'comfort');
+        void buddyBox.offsetWidth;
+        buddyBox.classList.add(right === true ? 'cheer' : 'comfort');
+      }
+    }
 
     const cq = queue[idx];
     const isZh = isZhType(cq);
@@ -568,6 +657,20 @@ window.Game = (function () {
     el.rCoins.textContent = coinsEarned
       ? '💰 +' + coinsEarned + ' coins earned!' + (zhBonus ? ' 🀄 ×2 bonus!' : '')
       : '';
+
+    // daily quests + the parent's learning log
+    Store.logRound(packId, correctCount, total);
+    const questsDone = []
+      .concat(zhBonus ? Store.bumpQuest('zhround', 1) : [])
+      .concat(Store.bumpQuest('correct', correctCount));
+    const rQuests = document.getElementById('result-quests');
+    if (rQuests) {
+      rQuests.innerHTML = questsDone
+        .map(q => '🎯 Daily quest done! ' + q.icon + ' +💰' + q.reward)
+        .join('<br>');
+      rQuests.classList.toggle('hidden', !questsDone.length);
+      if (questsDone.length) { Sfx.coin(); Confetti.emojiBurst(['🎯', '⭐'], 10); }
+    }
     if (el.rPrizes) el.rPrizes.textContent = '🎁 Prizes · 💰' + Store.getCoins();
 
     const buddy = Store.getBuddy();
@@ -584,7 +687,7 @@ window.Game = (function () {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  function stop() { clearInterval(timer); clearInterval(countdownTimer); Sfx.stopSpeak(); cancelListening(); }
+  function stop() { clearInterval(timer); clearInterval(countdownTimer); Sfx.stopSpeak(); cancelListening(); cancelEcho(); }
 
   function currentPack() { return packId; }
 

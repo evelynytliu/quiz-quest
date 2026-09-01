@@ -128,6 +128,24 @@ body{
 
 .pack-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;max-width:880px;margin:0 auto}
 
+/* ----- today's quests ----- */
+.quest-card{
+  max-width:520px;margin:14px auto 4px;background:var(--card);border-radius:20px;
+  box-shadow:var(--shadow-sm);border:1px solid rgba(0,0,0,.05);padding:12px 16px;text-align:left;
+}
+.quest-head{font-weight:900;color:var(--ink);font-size:.98rem;margin-bottom:8px}
+.quest-streak{color:#d9760c;font-weight:900}
+.quest-row{
+  display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:10px;
+  font-weight:700;color:var(--ink-soft);font-size:.92rem;
+}
+.quest-row .q-icon{flex:0 0 auto}
+.quest-row .q-label{flex:1;min-width:0}
+.quest-row .q-prog{flex:0 0 auto;font-weight:900;color:var(--ink)}
+.quest-row.done{background:linear-gradient(90deg,rgba(58,168,106,.10),transparent)}
+.quest-row.done .q-label{text-decoration:line-through;opacity:.7}
+.quest-row.done .q-prog{color:var(--c-green)}
+
 /* ----- language shelves: Chinese games vs English games ----- */
 .lang-section{max-width:880px;margin:0 auto 26px}
 .lang-section.lang-zh{
@@ -285,6 +303,7 @@ body{
 .listen-btn:active{transform:translateY(2px)}
 .listen-btn:disabled{opacity:.45;cursor:default;filter:none;transform:none}
 .listen-btn.listening{background:var(--c-red);animation:micPulse 1s ease-in-out infinite}
+.echo-btn{background:var(--c-purple, #9a6bd0)}
 @keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(232,71,47,.45)}50%{box-shadow:0 0 0 12px rgba(232,71,47,0)}}
 .listen-status{min-height:1.1em;margin-top:8px;color:var(--ink-soft);font-weight:700;font-size:.92rem}
 .streak-flag{
@@ -367,6 +386,27 @@ body{
   display:flex;align-items:center;gap:16px;padding:16px 20px;
   border:1px solid rgba(0,0,0,.05);animation:riseIn .28s ease;
 }
+/* the quiz buddy peeks over the feedback bar to cheer you on */
+.feedback-buddy{
+  position:absolute;top:-46px;right:22px;font-size:2.6rem;line-height:1;pointer-events:none;
+  filter:drop-shadow(0 6px 10px rgba(90,78,55,.25));
+}
+.feedback-buddy .fb-buddy-mood{font-size:1.4rem;position:absolute;top:-10px;right:-16px}
+.feedback-buddy.cheer{animation:buddyCheer .9s cubic-bezier(.3,1.6,.5,1)}
+@keyframes buddyCheer{
+  0%{transform:translateY(26px) scale(.4);opacity:0}
+  45%{transform:translateY(-14px) scale(1.15);opacity:1}
+  70%{transform:translateY(4px) scale(.98)}
+  100%{transform:translateY(0) scale(1)}
+}
+.feedback-buddy.comfort{animation:buddyComfort 1.4s ease}
+@keyframes buddyComfort{
+  0%{transform:translateY(20px);opacity:0}
+  30%{transform:translateY(0);opacity:1}
+  45%{transform:rotate(-8deg)}60%{transform:rotate(8deg)}
+  75%{transform:rotate(-5deg)}100%{transform:rotate(0)}
+}
+@media (prefers-reduced-motion: reduce){.feedback-buddy.cheer,.feedback-buddy.comfort{animation:none}}
 .feedback.correct{box-shadow:0 0 0 3px var(--c-green) inset, var(--shadow)}
 .feedback.wrong{box-shadow:0 0 0 3px var(--c-red) inset, var(--shadow)}
 @keyframes riseIn{0%{opacity:0;transform:translate(-50%,18px)}100%{opacity:1;transform:translate(-50%,0)}}
@@ -398,6 +438,10 @@ body{
 .result-score-label{font-size:.95rem;color:var(--ink-soft);font-weight:700;letter-spacing:.5px;text-transform:uppercase}
 .result-best{font-size:1.02rem;font-weight:800;color:var(--c-green);min-height:1.2em;margin-bottom:8px}
 .result-coins{font-size:1.08rem;font-weight:800;color:#a4781f;min-height:1.2em;margin-bottom:6px}
+.result-quests{
+  font-size:1rem;font-weight:900;color:var(--c-green);margin:0 auto 10px;line-height:1.6;
+  background:rgba(58,168,106,.10);border-radius:14px;padding:8px 16px;display:inline-block;
+}
 .result-buddy{font-size:3.4rem;line-height:1;margin-bottom:4px;animation:buddyBounce 1s ease-in-out infinite}
 .results-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px}
 
@@ -407,24 +451,50 @@ body{
 .write-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
 .write-title{font-family:var(--font-head);font-weight:600;font-size:1.7rem;color:var(--ink)}
 .write-hint{color:var(--ink-soft);font-weight:700;margin:10px 0 14px}
-.write-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px;
-  max-width:680px;margin:0 auto;
+.write-grid{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+/* themed islands, each with its own pastel shore */
+.write-island{
+  border-radius:24px;padding:14px 14px 18px;text-align:left;
+  box-shadow:var(--shadow-sm);border:2px dashed rgba(0,0,0,.08);
+}
+.write-island.island-0{background:linear-gradient(160deg,rgba(79,136,214,.12),rgba(116,197,192,.14))}
+.write-island.island-1{background:linear-gradient(160deg,rgba(58,168,106,.12),rgba(243,198,76,.14))}
+.write-island.island-2{background:linear-gradient(160deg,rgba(243,160,187,.16),rgba(240,165,147,.14))}
+.write-island.island-3{background:linear-gradient(160deg,rgba(230,176,63,.18),rgba(236,95,73,.10))}
+.island-head{display:flex;align-items:center;gap:8px;margin:2px 4px 12px;font-weight:900;color:var(--ink)}
+.island-emoji{font-size:1.5rem}
+.island-name{flex:1;font-size:1.02rem}
+.island-progress{font-size:.85rem;color:var(--ink-soft)}
+/* stepping stones along a dotted trail */
+.island-trail{
+  display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-start;justify-content:flex-start;
+  padding:4px 6px 10px;position:relative;
 }
 .write-cell{
-  background:var(--card);border:2px solid var(--line);border-radius:20px;cursor:pointer;
-  padding:12px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:var(--card);border:2.5px solid var(--line);border-radius:50%;cursor:pointer;
+  width:82px;height:82px;flex:0 0 auto;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
   box-shadow:var(--shadow-sm);transition:transform .12s, box-shadow .15s, border-color .15s;
+  position:relative;
 }
-.write-cell:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.island-trail .write-cell:nth-child(even){transform:translateY(14px)}
+.island-trail .write-cell:nth-child(even):hover{transform:translateY(11px)}
+.island-trail .write-cell:nth-child(odd):hover{transform:translateY(-3px)}
+.write-cell:hover{box-shadow:var(--shadow)}
 .write-cell:active{transform:translateY(0)}
+/* little dotted path between stones */
+.island-trail .write-cell:not(:last-child)::after{
+  content:"···";position:absolute;left:100%;top:50%;transform:translateY(-60%);
+  color:rgba(0,0,0,.25);font-weight:900;letter-spacing:2px;padding-left:2px;pointer-events:none;
+}
 .write-cell .wc-char{
-  font-size:2.6rem;line-height:1.15;font-weight:700;color:var(--ink);
+  font-size:2.1rem;line-height:1.1;font-weight:700;color:var(--ink);
   font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',var(--font-body);
 }
-.write-cell .wc-stars{font-size:.72rem;min-height:1em;letter-spacing:1px}
+.write-cell .wc-stars{font-size:.6rem;min-height:1em;letter-spacing:0}
 .write-cell.started{border-color:var(--c-yellow)}
 .write-cell.mastered{border-color:var(--gold);background:linear-gradient(160deg,#fff9e8,#fff3cf)}
+.write-cell.mastered::before{content:"👑";position:absolute;top:-12px;right:-4px;font-size:1rem}
 .write-back-btn{margin:2px auto 12px}
 .write-stage{
   background:var(--card);border-radius:26px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
@@ -573,6 +643,18 @@ body{
 .egg-rarity.r3{color:var(--gold)}
 .egg-hint{color:var(--ink-soft);font-weight:700;font-size:.98rem;min-height:1.2em;margin-top:8px}
 .sticker-tip{color:var(--ink-soft);font-weight:700;font-size:.92rem;margin:-6px 0 10px}
+
+/* ----- parent weekly report ----- */
+.report-player{border-bottom:1px dashed var(--line);padding:8px 0}
+.report-player:last-child{border-bottom:none}
+.report-player h4{margin:0 0 6px;font-size:1rem;color:var(--ink)}
+.report-list{list-style:none;margin:0;padding:0;font-size:.9rem;color:var(--ink-soft);font-weight:600}
+.report-list li{padding:2px 0}
+.report-chars{
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+  color:var(--ink);font-weight:700;
+}
+.report-empty{color:var(--ink-soft);font-size:.9rem;margin:0}
 .sticker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:10px;padding-bottom:24px}
 .sticker{
   position:relative;background:var(--card);border:1.5px solid var(--line);border-radius:16px;
