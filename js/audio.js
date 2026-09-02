@@ -127,14 +127,33 @@ window.Sfx = (function () {
     speechSynthesis.speak(u);
   }
 
-  // Speak a Chinese word/character in Mandarin (say it twice so it's clear).
-  function speakZh(text, onState) {
+  // How fast this device's Mandarin voice actually talks, learned by timing
+  // real utterances (ms per character). Drives the karaoke highlight pace on
+  // devices that don't report live speech progress.
+  let zhCharMs = 0;
+  function noteZhTiming(chars, ms) {
+    if (chars < 3) return;                       // single words are all overhead
+    const per = ms / chars;
+    if (per < 120 || per > 1200) return;         // cancelled or bogus sample
+    zhCharMs = zhCharMs ? zhCharMs * 0.5 + per * 0.5 : per;
+  }
+  function zhPace() { return zhCharMs ? Math.min(800, Math.max(180, Math.round(zhCharMs))) : 480; }
+
+  // Speak a Chinese word/character/sentence in Mandarin.
+  // onState(isSpeaking) fires at start/end; onBoundary(charIndex) fires as the
+  // voice reaches each word, where the browser supports boundary events.
+  function speakZh(text, onState, onBoundary) {
     if (!('speechSynthesis' in window) || muted) return;
     speechSynthesis.cancel();
     const u = utterZh(text);
-    if (typeof onState === 'function') {
-      u.onstart = () => onState(true);
-      u.onend = () => onState(false);
+    let t0 = 0;
+    u.onstart = () => { t0 = Date.now(); if (typeof onState === 'function') onState(true); };
+    u.onend = () => {
+      if (t0) noteZhTiming(Array.from(String(text)).length, Date.now() - t0);
+      if (typeof onState === 'function') onState(false);
+    };
+    if (typeof onBoundary === 'function') {
+      u.onboundary = (e) => { if (e && typeof e.charIndex === 'number') onBoundary(e.charIndex); };
     }
     speechSynthesis.speak(u);
   }
@@ -205,5 +224,6 @@ window.Sfx = (function () {
   function zhVoiceInfo() { return zhVoice ? zhVoice.name + ' [' + zhVoice.lang + ']' : ''; }
 
   return { correct, wrong, tick, beep, go, fanfare, tap, coin, pop, speak, speakList,
-    speakZh, speakZhEn, speakChineseMeaning, zhAvailable, zhVoiceInfo, stopSpeak, resume, setMuted };
+    speakZh, speakZhEn, speakChineseMeaning, zhAvailable, zhVoiceInfo, zhPace,
+    stopSpeak, resume, setMuted };
 })();

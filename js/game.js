@@ -61,13 +61,16 @@ window.Game = (function () {
 
   /* ---------- karaoke: light up a sentence's characters one by one ----------
      While a sentence is being spoken, each character grows and glows in turn,
-     pulling young eyes off the emoji and onto the characters themselves. */
+     pulling young eyes off the emoji and onto the characters themselves.
+     Sync: browsers that report live speech progress (boundary events) drive
+     the highlight directly; elsewhere a timer paced by the device's measured
+     speaking speed (Sfx.zhPace) keeps it close. */
   let karaokeTimer = null;
-  const KARAOKE_MS = 480;             // roughly the pace of the slowed TTS
-  function stopKaraoke() { clearTimeout(karaokeTimer); karaokeTimer = null; }
+  let kCtl = null;                    // controller for the active karaoke
+  function stopKaraoke() { clearTimeout(karaokeTimer); karaokeTimer = null; kCtl = null; }
   function karaoke(target, text) {
     stopKaraoke();
-    if (!target) return;
+    if (!target) return null;
     target.innerHTML = '';
     const spans = Array.from(text).map(c => {
       const s = document.createElement('span');
@@ -75,13 +78,35 @@ window.Game = (function () {
       target.appendChild(s);
       return s;
     });
-    let i = 0;
+    let i = -1;
+    const light = j => spans.forEach((s, k) => s.classList.toggle('lit', k === j));
     const step = () => {
-      spans.forEach((s, j) => s.classList.toggle('lit', j === i));
       i++;
-      if (i <= spans.length) karaokeTimer = setTimeout(step, KARAOKE_MS);
+      if (i > spans.length) return;
+      light(i);
+      karaokeTimer = setTimeout(step, Sfx.zhPace());
     };
-    karaokeTimer = setTimeout(step, 320);   // small lead-in while speech spins up
+    karaokeTimer = setTimeout(step, 300);   // small lead-in while speech spins up
+    kCtl = {
+      // live speech progress: jump straight to this character
+      to(idx) {
+        clearTimeout(karaokeTimer);
+        i = idx;
+        light(idx);
+        karaokeTimer = setTimeout(step, Sfx.zhPace());
+      },
+      // speech finished: nothing left to follow
+      end() { clearTimeout(karaokeTimer); light(-1); }
+    };
+    return kCtl;
+  }
+  // speech callbacks for a karaoke'd utterance — routed through the module
+  // handle so a stale utterance can't drive a newer question's highlights
+  function karaokeHooks(ctl) {
+    return [
+      on => { if (!on && kCtl === ctl && ctl) ctl.end(); },
+      idx => { if (kCtl === ctl && ctl) ctl.to(idx); }
+    ];
   }
 
   // read the current question aloud, the right way for its type
@@ -90,10 +115,14 @@ window.Game = (function () {
     if (!q) return;
     clearSpeaking();
     if (isZhType(q)) {
-      // character question: say the Chinese word (no English)
-      Sfx.speakZh(q.zh || q.options[q.correct] || q.emoji);
-      // a sentence on the big tile follows along character by character
-      if (q.packId === 'zh-sentences' && q.type === 'zhpic') karaoke(el.qEmoji, q.zh);
+      // character question: say the Chinese word (no English); a sentence on
+      // the big tile follows along character by character as it's spoken
+      if (q.packId === 'zh-sentences' && q.type === 'zhpic') {
+        const [onState, onBoundary] = karaokeHooks(karaoke(el.qEmoji, q.zh));
+        Sfx.speakZh(q.zh, onState, onBoundary);
+      } else {
+        Sfx.speakZh(q.zh || q.options[q.correct] || q.emoji);
+      }
     } else if (q.packId === 'chinese' && CJK.test(q.emoji || '')) {
       // meaning question: say the character in Mandarin, then the English Q + options
       Sfx.speakChineseMeaning(q.emoji, q.speak || q.text, q.options, setSpeaking);
@@ -632,13 +661,13 @@ window.Game = (function () {
     const isSentence = cq.packId === 'zh-sentences';
     const sayAnswer = () => {
       if (!isSentence) { Sfx.speakZhEn(zhWord, cq.en); return; }
-      Sfx.speakZh(zhWord);
       // follow the spoken sentence character by character: on the big tile
       // (picture questions) or on the correct answer button (sentence options)
       const target = cq.type === 'zhpic'
         ? el.qEmoji
         : (el.answers.children[cq.correct] && el.answers.children[cq.correct].querySelector('.zh-opt-char'));
-      karaoke(target, zhWord);
+      const [onState, onBoundary] = karaokeHooks(karaoke(target, zhWord));
+      Sfx.speakZh(zhWord, onState, onBoundary);
     };
     if (right === true) {
       el.fbIcon.textContent = ['🎉', '🌟', '🚀', '💪', '🏆'][Math.floor(Math.random() * 5)];
