@@ -487,15 +487,37 @@ window.Store = (function () {
     };
   }
 
+  /* ---------- no-repeat rotation ----------
+     Remember what was shown recently (per pack, on this device) and deal the
+     fresh items first, so kids cycle through the whole bank before anything
+     comes back around. */
+  const RECENT_KEY = 'milesQuiz.recent.v1';
+  function pickFresh(packKey, bank, n) {
+    let all = {};
+    try { all = JSON.parse(localStorage.getItem(RECENT_KEY) || '{}') || {}; } catch (e) {}
+    const recent = new Set(all[packKey] || []);
+    const pool = shuffle(bank.slice());
+    pool.sort((a, b) => (recent.has(a.ch) ? 1 : 0) - (recent.has(b.ch) ? 1 : 0));  // fresh first
+    const picks = pool.slice(0, n);
+    // keep the memory just short enough that n fresh items always remain
+    const cap = Math.max(0, Math.min(bank.length - n, 60));
+    all[packKey] = (all[packKey] || [])
+      .filter(c => !picks.some(p => p.ch === c))
+      .concat(picks.map(p => p.ch))
+      .slice(-cap);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(all)); } catch (e) {}
+    return picks;
+  }
+
   function generateZh(level, n) {
     const bank = ZH_WORDS.filter(w => w.lv <= level);
-    const picks = shuffle(bank.slice()).slice(0, n);
+    const picks = pickFresh('zh-quest', bank, n);
     return picks.map(w => makeZhQuestion(w, bank, level, 'zh-quest'));
   }
 
   function generateZhWords(level, n) {
     const bank = ZH_WORDS2.filter(w => w.lv <= level);
-    const picks = shuffle(bank.slice()).slice(0, n);
+    const picks = pickFresh('zh-words', bank, n);
     return picks.map(w => makeZhQuestion(w, bank, level, 'zh-words'));
   }
 
@@ -517,6 +539,16 @@ window.Store = (function () {
     { ch: '下雨了',     en: 'It is raining',               pic: '🌧️☂️', lv: 1 },
     { ch: '鴨子游泳',   en: 'The duck is swimming',        pic: '🦆🌊', lv: 1 },
     { ch: '熊在睡覺',   en: 'The bear is sleeping',        pic: '🐻💤', lv: 1 },
+    { ch: '貓咪畫畫',   en: 'The kitty is painting',       pic: '🐱🎨', lv: 1 },
+    { ch: '鴨子坐船',   en: 'The duck rides a boat',       pic: '🦆⛵', lv: 1 },
+    { ch: '豬豬愛花',   en: 'The piggy loves flowers',     pic: '🐷🌸', lv: 1 },
+    { ch: '鳥在洗澡',   en: 'The bird takes a bath',       pic: '🐦🛁', lv: 1 },
+    { ch: '狗狗玩球',   en: 'The doggy plays ball',        pic: '🐶⚽', lv: 1 },
+    { ch: '熊吃麵',     en: 'The bear eats noodles',       pic: '🐻🍜', lv: 1 },
+    { ch: '魚看月亮',   en: 'The fish looks at the moon',  pic: '🐟🌙', lv: 1 },
+    { ch: '雞在跳舞',   en: 'The chicken is dancing',      pic: '🐔💃', lv: 1 },
+    { ch: '下雪了',     en: 'It is snowing',               pic: '🌨️❄️', lv: 1 },
+    { ch: '月亮笑了',   en: 'The moon is smiling',         pic: '🌙😊', lv: 1 },
     /* level 2 — a little longer */
     { ch: '恐龍打籃球', en: 'The dinosaur plays basketball', pic: '🦖🏀', lv: 2 },
     { ch: '大象坐火車', en: 'The elephant rides the train',  pic: '🐘🚂', lv: 2 },
@@ -531,6 +563,24 @@ window.Store = (function () {
     { ch: '蜜蜂住城堡', en: 'The bee lives in a castle',     pic: '🐝🏰', lv: 2 },
     { ch: '熊愛吃蜂蜜', en: 'The bear loves honey',          pic: '🐻🍯', lv: 2 },
     { ch: '鯊魚愛吃糖', en: 'The shark loves candy',         pic: '🦈🍬', lv: 2 },
+    { ch: '恐龍愛蛋糕', en: 'The dinosaur loves cake',       pic: '🦖🍰', lv: 2 },
+    { ch: '猴子吃香蕉', en: 'The monkey eats a banana',      pic: '🐵🍌', lv: 2 },
+    { ch: '老鼠愛起司', en: 'The mouse loves cheese',        pic: '🐭🧀', lv: 2 },
+    { ch: '青蛙拿雨傘', en: 'The frog holds an umbrella',    pic: '🐸☂️', lv: 2 },
+    { ch: '小豬蓋房子', en: 'The little pig builds a house', pic: '🐷🏠', lv: 2 },
+    { ch: '鯨魚噴水',   en: 'The whale spouts water',        pic: '🐳⛲', lv: 2 },
+    { ch: '貓頭鷹看書', en: 'The owl reads a book',          pic: '🦉📖', lv: 2 },
+    { ch: '小鳥住樹上', en: 'The bird lives in a tree',      pic: '🐦🌳', lv: 2 },
+    { ch: '蝸牛慢慢走', en: 'The snail walks slowly',        pic: '🐌⏰', lv: 2 },
+    { ch: '雪人怕太陽', en: 'The snowman fears the sun',     pic: '⛄☀️', lv: 2 },
+    { ch: '星星愛月亮', en: 'The star loves the moon',       pic: '🌟🌙', lv: 2 },
+    { ch: '恐龍騎馬',   en: 'The dinosaur rides a horse',    pic: '🦖🐴', lv: 2 },
+    { ch: '鬼怕黑',     en: 'The ghost is scared of the dark', pic: '👻🌑', lv: 2 },
+    { ch: '蛋糕飛走了', en: 'The cake flew away',            pic: '🎂🎈', lv: 2 },
+    { ch: '貓咪坐火箭', en: 'The kitty rides a rocket',      pic: '🐱🚀', lv: 2 },
+    { ch: '恐龍上學去', en: 'The dinosaur goes to school',   pic: '🦖🎒', lv: 2 },
+    { ch: '老虎喝汽水', en: 'The tiger drinks soda',         pic: '🐯🥤', lv: 2 },
+    { ch: '猴子戴眼鏡', en: 'The monkey wears glasses',      pic: '🐵👓', lv: 2 },
     /* level 3 — the silliest ones */
     { ch: '章魚穿八隻鞋', en: 'The octopus wears eight shoes',  pic: '🐙👟', lv: 3 },
     { ch: '企鵝去海邊玩', en: 'The penguin goes to the beach',  pic: '🐧🏖️', lv: 3 },
@@ -543,7 +593,22 @@ window.Store = (function () {
     { ch: '機器人會唱歌', en: 'The robot can sing',             pic: '🤖🎵', lv: 3 },
     { ch: '恐龍賣冰淇淋', en: 'The dinosaur sells ice cream',   pic: '🦖🍦', lv: 3 },
     { ch: '聖誕老人游泳', en: 'Santa goes swimming',            pic: '🎅🌊', lv: 3 },
-    { ch: '青蛙王子唱歌', en: 'The frog prince sings',          pic: '🐸👑', lv: 3 }
+    { ch: '青蛙王子唱歌', en: 'The frog prince sings',          pic: '🐸👑', lv: 3 },
+    { ch: '熊貓騎腳踏車', en: 'The panda rides a bike',         pic: '🐼🚲', lv: 3 },
+    { ch: '兔子愛紅蘿蔔', en: 'The bunny loves carrots',        pic: '🐰🥕', lv: 3 },
+    { ch: '螃蟹剪頭髮',   en: 'The crab gives haircuts',        pic: '🦀✂️', lv: 3 },
+    { ch: '大象學溜冰',   en: 'The elephant learns to skate',   pic: '🐘⛸️', lv: 3 },
+    { ch: '章魚彈鋼琴',   en: 'The octopus plays the piano',    pic: '🐙🎹', lv: 3 },
+    { ch: '獅子去剪頭髮', en: 'The lion gets a haircut',        pic: '🦁💈', lv: 3 },
+    { ch: '企鵝愛吃冰',   en: 'The penguin loves shaved ice',   pic: '🐧🍧', lv: 3 },
+    { ch: '外星人來地球', en: 'The alien visits Earth',         pic: '👽🌍', lv: 3 },
+    { ch: '鞋子會走路',   en: 'The shoes walk by themselves',   pic: '👟👣', lv: 3 },
+    { ch: '機器人吃電池', en: 'The robot eats batteries',       pic: '🤖🔋', lv: 3 },
+    { ch: '恐龍打噴嚏',   en: 'The dinosaur sneezes',           pic: '🦖🤧', lv: 3 },
+    { ch: '大野狼吹氣球', en: 'The big bad wolf blows balloons', pic: '🐺🎈', lv: 3 },
+    { ch: '恐龍學寫字',   en: 'The dinosaur learns to write',   pic: '🦖✏️', lv: 3 },
+    { ch: '螞蟻搬蛋糕',   en: 'The ants carry a cake',          pic: '🐜🍰', lv: 3 },
+    { ch: '火車鑽山洞',   en: 'The train goes through the tunnel', pic: '🚂⛰️', lv: 3 }
   ];
 
   function makeSentQuestion(s, bank, level) {
@@ -583,7 +648,7 @@ window.Store = (function () {
 
   function generateZhSentences(level, n) {
     const bank = ZH_SENTS.filter(s => s.lv <= level);
-    const picks = shuffle(bank.slice()).slice(0, n);
+    const picks = pickFresh('zh-sentences', bank, n);
     return picks.map(s => makeSentQuestion(s, bank, level));
   }
 
