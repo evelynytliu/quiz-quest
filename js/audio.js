@@ -65,18 +65,28 @@ window.Sfx = (function () {
     // and the first match is usually the most robotic one, so rank them:
     // Taiwanese Mandarin first, then the natural-sounding voices (downloaded
     // "enhanced/premium" voices, Siri, Chrome's Google voice), robots last.
+    // Cantonese is NOT Mandarin: its codes (yue-Hant-HK, zh-HK) must never
+    // win, however fancy the voice — anchor the lang tests so "Hant" inside
+    // yue-Hant-HK can't score as Taiwanese.
     const zhAll = voices.filter(v => /^(zh|yue|cmn)/i.test(v.lang) || /中文|國語|普通话|台灣|臺灣/i.test(v.name));
     const zhScore = v => {
+      const lang = String(v.lang || ''), name = String(v.name || '');
       let s = 0;
-      if (/(-|_)?(tw|hant)/i.test(v.lang) || /台灣|臺灣|國語/i.test(v.name)) s += 40;
-      else if (/(-|_)?(cn|hans)/i.test(v.lang)) s += 20;
-      if (/premium|enhanced|natural|neural|siri/i.test(v.name)) s += 30;
-      if (/google/i.test(v.name)) s += 25;
-      if (/mei-?jia|美佳|yu-?shu|雅婷|yating|shasha|婷婷|tingting/i.test(v.name)) s += 12;
-      if (/eloquence|espeak|compact|novelty/i.test(v.name)) s -= 50;
+      if (/^yue/i.test(lang) || /(-|_)hk/i.test(lang) || /cantonese|廣東話|粵語|粤语/i.test(name)) s -= 100;
+      if (/^(zh|cmn)(-|_)(tw|hant)/i.test(lang) || /台灣|臺灣|國語/i.test(name)) s += 40;
+      else if (/^(zh|cmn)(-|_)(cn|hans)/i.test(lang) || /^cmn/i.test(lang)) s += 20;
+      else if (/^zh$/i.test(lang)) s += 10;
+      if (/premium|enhanced|natural|neural|siri/i.test(name)) s += 30;
+      if (/google/i.test(name)) s += 25;
+      if (/mei-?jia|美佳|yu-?shu|雅婷|yating|shasha|婷婷|tingting/i.test(name)) s += 12;
+      if (/eloquence|espeak|compact|novelty/i.test(name)) s -= 50;
       return s;
     };
     zhVoice = zhAll.sort((a, b) => zhScore(b) - zhScore(a))[0] || null;
+    // if the best on offer is still Cantonese, use no voice at all: utterZh
+    // falls back to lang "zh-TW" and the device engine picks its own default
+    // Mandarin voice instead (Android often has one it doesn't list)
+    if (zhVoice && zhScore(zhVoice) < 0) zhVoice = null;
   }
   if ('speechSynthesis' in window) {
     pickVoice();
@@ -191,6 +201,9 @@ window.Sfx = (function () {
   function resume() { const c = ac(); if (c && c.state === 'suspended') c.resume(); }
   function setMuted(m) { muted = m; if (m) stopSpeak(); }
 
+  // which Mandarin voice won the ranking (empty = engine default via zh-TW)
+  function zhVoiceInfo() { return zhVoice ? zhVoice.name + ' [' + zhVoice.lang + ']' : ''; }
+
   return { correct, wrong, tick, beep, go, fanfare, tap, coin, pop, speak, speakList,
-    speakZh, speakZhEn, speakChineseMeaning, zhAvailable, stopSpeak, resume, setMuted };
+    speakZh, speakZhEn, speakChineseMeaning, zhAvailable, zhVoiceInfo, stopSpeak, resume, setMuted };
 })();
