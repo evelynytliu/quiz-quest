@@ -163,21 +163,28 @@ window.Writer = (function () {
     writer.hideCharacter();
     setMsg('✍️ Your turn — trace each stroke with your finger!');
     Sfx.speakZh(current);
+    let misses = 0;                 // wrong strokes = fewer stars
     writer.quiz({
       onCorrectStroke: () => Sfx.pop(),
-      onMistake: () => Sfx.tap(),
+      onMistake: () => { misses++; Sfx.tap(); },
       onComplete: () => {
         mode = 'idle';
-        const n = Store.addWriteStar(current);
-        const coins = n === 1 ? FIRST_STAR_COINS : REPEAT_COINS;
+        // grade this attempt: careful writing earns more stars
+        const grade = misses === 0 ? 3 : misses <= 2 ? 2 : 1;
+        const prev = Store.getWriteStars()[current] || 0;
+        const n = Store.setWriteStars(current, grade);
+        const coins = prev === 0 ? FIRST_STAR_COINS : REPEAT_COINS;
         Store.addCoins(coins);
         Store.logWrite(current);
         const quest = Store.bumpQuest('write', 1);
         Sfx.fanfare(); Sfx.coin();
         Confetti.burst(70, window.innerHeight * 0.4);
-        if (n >= 3) Confetti.emojiBurst(['✨', '🌟'], 14);
+        if (grade === 3) Confetti.emojiBurst(['✨', '🌟'], 14);
         el.writeStars.textContent = starStr(n);
-        setMsg((n >= 3 ? '🌟 Mastered! ' : '🎉 Wonderful! ') + '+💰' + coins
+        const praise = grade === 3 ? '🌟 Perfect writing! 完美！'
+          : grade === 2 ? '🎉 Great writing! 很棒！'
+          : '💪 Done! Write it again for more stars 再寫一次拿更多星！';
+        setMsg(praise + '  +💰' + coins
           + (quest.length ? '  ·  🎯 Daily quest done! +💰' + quest[0].reward : ''));
         const m = META[current] || {};
         Sfx.speakZhEn(current, m.en);

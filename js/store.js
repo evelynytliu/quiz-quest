@@ -826,13 +826,15 @@ window.Store = (function () {
     return completed;
   }
 
-  /* ---------- Write Quest stars (per player, capped at 3 per character) ---------- */
+  /* ---------- Write Quest stars (per player) ----------
+     Stars are a grade for how carefully the character was traced (3 = no
+     wrong strokes). The best grade ever earned is kept per character. */
   function getWriteStars() { return readJSON(WRITE_KEY, {})[playerKey()] || {}; }
-  function addWriteStar(ch) {
+  function setWriteStars(ch, stars) {
     const all = readJSON(WRITE_KEY, {});
     const k = playerKey();
     all[k] = all[k] || {};
-    all[k][ch] = Math.min(3, (all[k][ch] || 0) + 1);
+    all[k][ch] = Math.max(all[k][ch] || 0, Math.max(1, Math.min(3, stars)));
     writeJSON(WRITE_KEY, all);
     return all[k][ch];
   }
@@ -862,7 +864,7 @@ window.Store = (function () {
     getBest, setBest, uid,
     getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
     getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy,
-    getWriteStars, addWriteStar,
+    getWriteStars, setWriteStars,
     logRound, logWrite, getActivity, getActivityFor, getPlayStreak,
     getQuests, bumpQuest
   };
