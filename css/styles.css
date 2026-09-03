@@ -469,6 +469,9 @@ body{
 .write-island.island-1{background:linear-gradient(160deg,rgba(58,168,106,.12),rgba(243,198,76,.14))}
 .write-island.island-2{background:linear-gradient(160deg,rgba(243,160,187,.16),rgba(240,165,147,.14))}
 .write-island.island-3{background:linear-gradient(160deg,rgba(230,176,63,.18),rgba(236,95,73,.10))}
+.write-island.island-4{background:linear-gradient(160deg,rgba(138,127,218,.14),rgba(243,160,187,.14))}
+.write-island.island-5{background:linear-gradient(160deg,rgba(116,197,192,.16),rgba(58,168,106,.10))}
+.write-island.island-6{background:linear-gradient(160deg,rgba(243,198,76,.16),rgba(116,197,192,.14))}
 .island-head{display:flex;align-items:center;gap:8px;margin:2px 4px 12px;font-weight:900;color:var(--ink)}
 .island-emoji{font-size:1.5rem}
 .island-name{flex:1;font-size:1.02rem}
@@ -504,6 +507,34 @@ body{
 .write-cell.mastered{border-color:var(--gold);background:linear-gradient(160deg,#fff9e8,#fff3cf)}
 .write-cell.mastered::before{content:"👑";position:absolute;top:-12px;right:-4px;font-size:1rem}
 .write-back-btn{margin:2px auto 12px}
+
+/* ----- 我的名字: the child's own name, set by a grown-up ----- */
+.write-island.island-mine{
+  background:linear-gradient(160deg,rgba(230,176,63,.20),rgba(236,95,73,.12));
+  border:2.5px solid rgba(230,176,63,.55);
+}
+.island-head .name-edit{
+  flex:0 0 auto;border:none;cursor:pointer;background:rgba(255,255,255,.75);
+  border-radius:11px;padding:4px 9px;font-size:1rem;line-height:1;
+  box-shadow:var(--shadow-sm);transition:transform .12s;
+}
+.island-head .name-edit:hover{transform:scale(1.08)}
+.island-head .name-edit:active{transform:scale(.94)}
+.name-empty{
+  margin:2px 6px 4px;color:var(--ink-soft);font-weight:700;font-size:.92rem;line-height:1.5;
+}
+.island-mine .write-cell{border-color:rgba(230,176,63,.7);background:#fffdf5}
+.island-mine .write-cell.mastered{border-color:var(--gold)}
+
+/* the name modal */
+#name-input{
+  border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;width:min(260px,90%);
+  font-size:1.5rem;text-align:center;margin-bottom:10px;font-weight:700;letter-spacing:.12em;
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+}
+.name-status{min-height:1.3em;font-weight:700;color:var(--c-red);font-size:.92rem;margin-bottom:12px !important}
+.name-actions{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.name-actions .ghost-btn{width:auto;margin:0;text-align:center;padding:12px 18px}
 .write-stage{
   background:var(--card);border-radius:26px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
   padding:18px 14px 20px;
