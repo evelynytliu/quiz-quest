@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=20260903d" />
+  <link rel="stylesheet" href="css/styles.css?v=20260903e" />
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
@@ -131,10 +131,17 @@
       <header class="prizes-top">
         <button class="exit-home" type="button" title="Back to home" aria-label="Home">🏠</button>
         <h1 class="prizes-title">🎁 Prize Machine</h1>
-        <div class="pill coin-pill">💰 <span id="prize-coins">0</span></div>
+        <div class="prize-pills">
+          <div class="pill ticket-pill" id="ticket-pill" title="Golden tickets">🎟️ <span id="prize-tickets">0</span></div>
+          <div class="pill coin-pill">💰 <span id="prize-coins">0</span></div>
+        </div>
       </header>
 
+      <!-- one machine per sticker series; finishing a series opens the next -->
+      <div id="machine-tabs" class="machine-tabs"><!-- tabs injected --></div>
+
       <div class="egg-area">
+        <div id="machine-title" class="machine-title"></div>
         <!-- the gacha machine: coins go in, the knob turns, a capsule pops out -->
         <div id="gacha-machine" class="gacha-machine" aria-label="Capsule toy machine">
           <div class="gacha-dome">
@@ -166,8 +173,8 @@
       </div>
 
       <h2 class="section-title">📒 My Sticker Book <span id="sticker-count" class="muted"></span></h2>
-      <p class="sticker-tip">Tap a sticker to make it your quiz buddy!</p>
-      <div id="sticker-grid" class="sticker-grid"></div>
+      <p class="sticker-tip">Tap a sticker to make it your quiz buddy! ✨ = shiny version · 🎟️ every <span id="dupes-per-ticket">5</span> duplicates make a golden ticket (<span id="dupe-count">0</span> / <span id="dupes-per-ticket2">5</span>)</p>
+      <div id="sticker-book" class="sticker-book"><!-- one section per series injected --></div>
     </div>
   </section>
 
@@ -364,27 +371,27 @@
     </div>
   </section>
 
-  <script src="js/zh-data.js?v=20260903d"></script>
-  <script src="js/seed.js?v=20260903d"></script>
-  <script src="js/store.js?v=20260903d"></script>
-  <script src="js/audio.js?v=20260903d"></script>
-  <script src="js/voice.js?v=20260903d"></script>
-  <script src="js/confetti.js?v=20260903d"></script>
-  <script src="js/results.js?v=20260903d"></script>
-  <script src="js/game.js?v=20260903d"></script>
-  <script src="js/write.js?v=20260903d"></script>
-  <script src="js/mini.js?v=20260903d"></script>
-  <script src="js/build.js?v=20260903d"></script>
-  <script src="js/whack.js?v=20260903d"></script>
-  <script src="js/match.js?v=20260903d"></script>
-  <script src="js/bingo.js?v=20260903d"></script>
-  <script src="js/order.js?v=20260903d"></script>
-  <script src="js/morph.js?v=20260903d"></script>
-  <script src="js/flash.js?v=20260903d"></script>
-  <script src="js/hunt.js?v=20260903d"></script>
-  <script src="js/garden.js?v=20260903d"></script>
-  <script src="js/prizes.js?v=20260903d"></script>
-  <script src="js/editor.js?v=20260903d"></script>
-  <script src="js/main.js?v=20260903d"></script>
+  <script src="js/zh-data.js?v=20260903e"></script>
+  <script src="js/seed.js?v=20260903e"></script>
+  <script src="js/store.js?v=20260903e"></script>
+  <script src="js/audio.js?v=20260903e"></script>
+  <script src="js/voice.js?v=20260903e"></script>
+  <script src="js/confetti.js?v=20260903e"></script>
+  <script src="js/results.js?v=20260903e"></script>
+  <script src="js/game.js?v=20260903e"></script>
+  <script src="js/write.js?v=20260903e"></script>
+  <script src="js/mini.js?v=20260903e"></script>
+  <script src="js/build.js?v=20260903e"></script>
+  <script src="js/whack.js?v=20260903e"></script>
+  <script src="js/match.js?v=20260903e"></script>
+  <script src="js/bingo.js?v=20260903e"></script>
+  <script src="js/order.js?v=20260903e"></script>
+  <script src="js/morph.js?v=20260903e"></script>
+  <script src="js/flash.js?v=20260903e"></script>
+  <script src="js/hunt.js?v=20260903e"></script>
+  <script src="js/garden.js?v=20260903e"></script>
+  <script src="js/prizes.js?v=20260903e"></script>
+  <script src="js/editor.js?v=20260903e"></script>
+  <script src="js/main.js?v=20260903e"></script>
 </body>
 </html>

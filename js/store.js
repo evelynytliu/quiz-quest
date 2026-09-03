@@ -619,7 +619,7 @@ window.Store = (function () {
     savePlayers(getPlayers().filter(n => n !== name));
     const all = allBest();
     if (all[name]) { delete all[name]; saveBest(all); }       // drop their scores too
-    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY, NAME_KEY, ACT_KEY, QUEST_KEY, CHARS_KEY, UNLOCK_KEY].forEach(k => {   // and their data
+    [COINS_KEY, STICKERS_KEY, SHINY_KEY, TICKET_KEY, BUDDY_KEY, WRITE_KEY, NAME_KEY, ACT_KEY, QUEST_KEY, CHARS_KEY, UNLOCK_KEY].forEach(k => {   // and their data
       const o = readJSON(k, {});
       if (o[name] != null) { delete o[name]; writeJSON(k, o); }
     });
@@ -673,6 +673,57 @@ window.Store = (function () {
     all[k][emoji] = (all[k][emoji] || 0) + 1;
     writeJSON(STICKERS_KEY, all);
     return all[k][emoji];
+  }
+  // shiny ✨ versions of stickers, collected separately
+  const SHINY_KEY = 'milesQuiz.shiny.v1';
+  function getShiny() { return readJSON(SHINY_KEY, {})[playerKey()] || {}; }
+  function addShiny(emoji) {
+    const all = readJSON(SHINY_KEY, {});
+    const k = playerKey();
+    all[k] = all[k] || {};
+    all[k][emoji] = (all[k][emoji] || 0) + 1;
+    writeJSON(SHINY_KEY, all);
+    return all[k][emoji];
+  }
+  // duplicates pile up; every DUPES_PER_TICKET of them become a golden ticket
+  const TICKET_KEY = 'milesQuiz.tickets.v1';
+  const DUPES_PER_TICKET = 5;
+  function ticketState() { return readJSON(TICKET_KEY, {})[playerKey()] || { tickets: 0, dupes: 0, seeded: false }; }
+  function saveTicketState(st) {
+    const all = readJSON(TICKET_KEY, {});
+    all[playerKey()] = st;
+    writeJSON(TICKET_KEY, all);
+  }
+  function getTickets() { return ticketState().tickets; }
+  function getDupes() { return ticketState().dupes; }
+  // note a duplicate pull; returns true when it completed a ticket
+  function addDupe() {
+    const st = ticketState();
+    st.dupes++;
+    let ticket = false;
+    if (st.dupes >= DUPES_PER_TICKET) { st.dupes -= DUPES_PER_TICKET; st.tickets++; ticket = true; }
+    saveTicketState(st);
+    return ticket;
+  }
+  function useTicket() {
+    const st = ticketState();
+    if (st.tickets <= 0) return false;
+    st.tickets--;
+    saveTicketState(st);
+    return true;
+  }
+  // one-time: duplicates collected before tickets existed count towards them
+  function seedTickets() {
+    const st = ticketState();
+    if (st.seeded) return 0;
+    const owned = getStickers();
+    let extra = 0;
+    Object.keys(owned).forEach(e => { extra += Math.max(0, owned[e] - 1); });
+    st.tickets += Math.floor(extra / DUPES_PER_TICKET);
+    st.dupes = extra % DUPES_PER_TICKET;
+    st.seeded = true;
+    saveTicketState(st);
+    return Math.floor(extra / DUPES_PER_TICKET);
   }
   function getBuddy() { return readJSON(BUDDY_KEY, {})[playerKey()] || ''; }
   function setBuddy(emoji) {
@@ -871,6 +922,7 @@ window.Store = (function () {
     getBest, setBest, uid,
     getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
     getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy,
+    getShiny, addShiny, getTickets, getDupes, addDupe, useTicket, seedTickets, DUPES_PER_TICKET,
     getWriteStars, setWriteStars, getWriteName, setWriteName,
     logRound, logWrite, getActivity, getActivityFor, getPlayStreak,
     getQuests, bumpQuest,

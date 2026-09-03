@@ -598,6 +598,45 @@ body{
 .prizes-wrap{max-width:760px;margin:0 auto;text-align:center;padding-top:6px}
 .prizes-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
 .prizes-title{font-family:var(--font-head);font-weight:600;font-size:1.7rem;color:var(--ink)}
+.prize-pills{display:flex;gap:6px;align-items:center}
+.ticket-pill{background:#fff;color:var(--ink-soft);opacity:.75}
+.ticket-pill.has{background:linear-gradient(135deg,#ffe08a,#f5c045);color:#4a3712;opacity:1;border-color:transparent;animation:wiggle 2.4s ease-in-out infinite}
+/* ----- one machine per series ----- */
+.machine-tabs{display:flex;gap:8px;overflow-x:auto;padding:6px 4px 10px;margin:4px -4px 0;scrollbar-width:none}
+.machine-tabs::-webkit-scrollbar{display:none}
+.machine-tab{
+  flex:0 0 auto;min-width:104px;border:2px solid transparent;border-radius:16px;padding:8px 10px;cursor:pointer;
+  background:var(--card);box-shadow:var(--shadow-sm);font-family:var(--font-body);color:var(--ink);
+  display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .12s, box-shadow .15s;
+}
+.machine-tab:hover{transform:translateY(-2px)}
+.machine-tab .mt-emoji{font-size:1.6rem;line-height:1}
+.machine-tab .mt-name{font-weight:900;font-size:.82rem;white-space:nowrap}
+.machine-tab .mt-cost{font-size:.72rem;font-weight:700;color:var(--ink-soft);white-space:nowrap}
+.machine-tab.active{border-color:var(--gold);box-shadow:var(--shadow);transform:translateY(-2px)}
+.machine-tab.locked{opacity:.55;filter:grayscale(.8)}
+.machine-tab.theme-ocean.active{background:linear-gradient(160deg,#e3f4fb,#fff)}
+.machine-tab.theme-space.active{background:linear-gradient(160deg,#e8e6fa,#fff)}
+.machine-tab.theme-magic.active{background:linear-gradient(160deg,#f6e6fb,#fff)}
+.machine-tab.theme-wild.active{background:linear-gradient(160deg,#fbeedc,#fff)}
+.machine-tab.theme-gold.active{background:linear-gradient(160deg,#fff1c2,#fff)}
+.machine-title{font-family:var(--font-head);font-weight:600;font-size:1.15rem;color:var(--ink);margin-bottom:10px}
+/* machine themes: dome tint and body colour follow the series */
+.gacha-machine.theme-ocean .gacha-dome{border-color:#2f9bd6}
+.gacha-machine.theme-ocean .gacha-body{background:linear-gradient(165deg,#4fa6e6,#2b7fc4)}
+.gacha-machine.theme-ocean .gacha-knob{border-color:#1f5f96}.gacha-machine.theme-ocean .knob-bar{background:#1f5f96}
+.gacha-machine.theme-space .gacha-dome{border-color:#5a4fd6;background:linear-gradient(165deg,rgba(60,50,120,.85),rgba(30,30,80,.9))}
+.gacha-machine.theme-space .gacha-body{background:linear-gradient(165deg,#6a5fe0,#3d34a8)}
+.gacha-machine.theme-space .gacha-knob{border-color:#2a2478}.gacha-machine.theme-space .knob-bar{background:#2a2478}
+.gacha-machine.theme-magic .gacha-dome{border-color:#b06bd0}
+.gacha-machine.theme-magic .gacha-body{background:linear-gradient(165deg,#c07ee0,#8e4fb8)}
+.gacha-machine.theme-magic .gacha-knob{border-color:#6a3690}.gacha-machine.theme-magic .knob-bar{background:#6a3690}
+.gacha-machine.theme-wild .gacha-dome{border-color:#c9822a}
+.gacha-machine.theme-wild .gacha-body{background:linear-gradient(165deg,#e39a3c,#b8651c)}
+.gacha-machine.theme-wild .gacha-knob{border-color:#7a4410}.gacha-machine.theme-wild .knob-bar{background:#7a4410}
+.gacha-machine.theme-gold .gacha-dome{border-color:#e6b03f;box-shadow:0 0 24px rgba(245,192,69,.55), inset 0 -10px 22px rgba(90,140,190,.18)}
+.gacha-machine.theme-gold .gacha-body{background:linear-gradient(165deg,#f5c045,#d9951a);box-shadow:0 0 26px rgba(245,192,69,.5)}
+.gacha-machine.theme-gold .gacha-knob{border-color:#8a5c08}.gacha-machine.theme-gold .knob-bar{background:#8a5c08}
 .coin-pill{background:var(--gold);color:#4a3712;border-color:transparent}
 .egg-area{
   background:var(--card);border-radius:26px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
@@ -664,6 +703,7 @@ body{
 }
 .gacha-drop.r2{background:linear-gradient(160deg,var(--c-blue) 50%,#fffdf8 50%)}
 .gacha-drop.r3{background:linear-gradient(160deg,#f5c045 50%,#fff3cf 50%);box-shadow:0 0 14px rgba(245,192,69,.8)}
+.gacha-drop.r4{background:conic-gradient(#ff595e,#ffca3a,#8ac926,#1982c4,#6a4c93,#ff595e);box-shadow:0 0 18px rgba(255,255,255,.9)}
 .gacha-drop.falling{animation:capsuleFall .7s cubic-bezier(.3,.6,.4,1.3) forwards}
 @keyframes capsuleFall{
   0%{top:-10px;opacity:0}25%{opacity:1}
@@ -693,6 +733,14 @@ body{
 }
 .gacha-capsule.r2 .cap-top{background:radial-gradient(circle at 35% 25%,#7fa9e0,#4f88d6 75%)}
 .gacha-capsule.r3 .cap-top{background:radial-gradient(circle at 35% 25%,#ffe08a,#f0b429 75%);box-shadow:0 0 22px rgba(245,192,69,.75)}
+/* legendary: a rainbow capsule that pulses with light */
+.gacha-capsule.r4 .cap-top{background:conic-gradient(from 200deg,#ff595e,#ffca3a,#8ac926,#1982c4,#6a4c93,#ff595e);box-shadow:0 0 30px rgba(255,255,255,.95), 0 0 60px rgba(255,202,58,.7);animation:legendGlow 1s ease-in-out infinite alternate}
+.gacha-capsule.r4 .cap-bottom{background:radial-gradient(circle at 40% 40%,#fffdf8,#ffe9a8 80%)}
+@keyframes legendGlow{0%{filter:brightness(1)}100%{filter:brightness(1.35)}}
+/* shiny: sparkles on the capsule and around the sticker */
+.gacha-capsule.shiny::before{content:"✨";position:absolute;top:-14px;left:-10px;font-size:1.6rem;animation:twinkle 1s ease-in-out infinite;z-index:3}
+.gacha-capsule.shiny::after{content:"✨";position:absolute;bottom:-8px;right:-12px;font-size:1.3rem;animation:twinkle 1.3s ease-in-out .3s infinite;z-index:3}
+@keyframes twinkle{0%,100%{transform:scale(.7) rotate(0);opacity:.6}50%{transform:scale(1.2) rotate(20deg);opacity:1}}
 .gacha-capsule.landed:not(.open){animation:capsuleLand .55s cubic-bezier(.3,1.6,.5,1), capsuleTease 1.6s ease-in-out .8s infinite}
 @keyframes capsuleTease{0%,100%{transform:rotate(0)}30%{transform:rotate(-5deg) scale(1.03)}60%{transform:rotate(4deg) scale(1.03)}}
 .gacha-capsule .cap-sticker{
@@ -713,6 +761,7 @@ body{
 .egg-rarity.r1{color:var(--ink-soft)}
 .egg-rarity.r2{color:var(--c-blue)}
 .egg-rarity.r3{color:var(--gold)}
+.egg-rarity.r4{background:linear-gradient(90deg,#ff595e,#ffca3a,#8ac926,#1982c4,#6a4c93);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:1.1rem;letter-spacing:1px}
 .egg-hint{color:var(--ink-soft);font-weight:700;font-size:.98rem;min-height:1.2em;margin-top:8px}
 .sticker-tip{color:var(--ink-soft);font-weight:700;font-size:.92rem;margin:-6px 0 10px}
 
@@ -738,6 +787,23 @@ body{
 .sticker.locked{opacity:.45;background:var(--card-soft);filter:grayscale(1);font-size:1.5rem}
 .sticker.rare{border-color:var(--c-blue)}
 .sticker.epic{border-color:var(--gold);background:#fdf6e3}
+.sticker.legend{border-color:transparent;background:linear-gradient(#fff,#fff) padding-box,conic-gradient(#ff595e,#ffca3a,#8ac926,#1982c4,#6a4c93,#ff595e) border-box;border-width:3px}
+.sticker.legend.locked{background:var(--card-soft);border-color:var(--line)}
+.sticker.shiny{box-shadow:0 0 0 2px #fff, 0 0 14px 3px rgba(255,202,58,.75);background:linear-gradient(160deg,#fffbe6,#fff)}
+.sticker .st-shiny{position:absolute;top:-8px;left:-8px;font-size:.85rem;animation:twinkle 1.4s ease-in-out infinite}
+/* the sticker book, one shelf per series */
+.sticker-book{display:flex;flex-direction:column;gap:14px;padding-bottom:24px;text-align:left}
+.book-series{border-radius:22px;padding:12px 12px 14px;border:2px dashed rgba(0,0,0,.08);background:rgba(255,255,255,.55)}
+.book-series.theme-ocean{background:linear-gradient(160deg,rgba(79,136,214,.10),rgba(116,197,192,.14))}
+.book-series.theme-space{background:linear-gradient(160deg,rgba(138,127,218,.14),rgba(79,91,214,.10))}
+.book-series.theme-magic{background:linear-gradient(160deg,rgba(154,107,208,.12),rgba(243,160,187,.14))}
+.book-series.theme-wild{background:linear-gradient(160deg,rgba(232,133,12,.12),rgba(58,168,106,.10))}
+.book-series.locked{opacity:.6;filter:grayscale(.7)}
+.book-series .sticker-grid{padding-bottom:0}
+.book-head{display:flex;align-items:center;gap:8px;margin:0 4px 10px;font-weight:900;color:var(--ink)}
+.book-head .bh-emoji{font-size:1.4rem}
+.book-head .bh-name{flex:1;font-size:.98rem}
+.book-head .bh-prog{font-size:.85rem;color:var(--ink-soft)}
 .sticker.buddy{outline:3px solid var(--c-green);outline-offset:2px}
 .sticker .st-count{
   position:absolute;top:-7px;right:-7px;background:var(--c-blue);color:var(--paper);
