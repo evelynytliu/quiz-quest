@@ -11,7 +11,8 @@ window.Results = (function () {
     coins: document.getElementById('result-coins'),
     quests: document.getElementById('result-quests'),
     buddy: document.getElementById('result-buddy'),
-    prizes: document.getElementById('go-prizes')
+    prizes: document.getElementById('go-prizes'),
+    key: document.getElementById('result-key')
   };
   let replayFn = null;
   let lastPack = '';
@@ -69,6 +70,19 @@ window.Results = (function () {
       if (questsDone.length) { Sfx.coin(); Confetti.emojiBurst(['🎯', '⭐'], 10); }
     }
     if (el.prizes) el.prizes.textContent = '🎁 Prizes · 💰' + Store.getCoins();
+
+    // a good round earns a key that opens a new game (a couple a day)
+    const gotKey = stars >= 2 && Store.earnKey();
+    if (el.key) {
+      el.key.classList.toggle('hidden', !gotKey);
+      if (gotKey) {
+        const left = Store.lockedGames().length;
+        el.key.textContent = '🔑 You earned a key! Unlock a new game 得到一把鑰匙，可以開新遊戲！'
+          + (left > 1 ? ' (' + left + ' games waiting)' : '');
+        setTimeout(() => { Sfx.coin(); Confetti.emojiBurst(['🔑', '✨'], 12); }, 900);
+        setTimeout(() => Sfx.speak('You earned a key! Go unlock a new game!'), 1500);
+      }
+    }
 
     const buddy = Store.getBuddy();
     el.buddy.textContent = buddy;

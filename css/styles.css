@@ -146,6 +146,39 @@ body{
 .quest-row.done .q-label{text-decoration:line-through;opacity:.7}
 .quest-row.done .q-prog{color:var(--c-green)}
 
+/* ----- keys: a good round earns one, a key opens a locked game ----- */
+.key-card{
+  max-width:520px;margin:12px auto 4px;background:linear-gradient(135deg,#fff6d6,#fff);border-radius:20px;
+  box-shadow:var(--shadow-sm);border:2px dashed rgba(230,176,63,.55);padding:10px 16px;text-align:left;
+}
+.key-head{font-weight:900;color:#7a5a12;font-size:1rem}
+.key-count{display:inline-block;background:var(--gold);color:#4a3712;border-radius:999px;padding:1px 12px;margin-left:4px;font-size:1.05rem}
+.key-msg{font-weight:700;color:var(--ink-soft);font-size:.9rem;margin-top:4px;line-height:1.4}
+/* locked game cards: greyed out, padlock on top, still readable */
+.pack-card.locked{filter:grayscale(.85) brightness(1.05);opacity:.7;box-shadow:none}
+.pack-card.locked .p-emoji{opacity:.45}
+.pack-card.locked:hover{transform:none;filter:grayscale(.85) brightness(1.08)}
+.pack-card .p-lock{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-72%);font-size:2.6rem;z-index:2;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.25));pointer-events:none;
+}
+/* a key in hand: the padlocks glow and wiggle, asking to be opened */
+.pack-card.locked.unlockable{filter:none;opacity:1;outline:4px solid var(--gold);outline-offset:3px;animation:wiggle 2.2s ease-in-out infinite;box-shadow:var(--shadow-sm)}
+.pack-card.locked.unlockable .p-emoji{opacity:.6}
+.pack-card.locked.unlockable .p-lock{animation:lockBob 1s ease-in-out infinite}
+@keyframes lockBob{0%,100%{transform:translate(-50%,-72%)}50%{transform:translate(-50%,-90%) scale(1.12)}}
+.pack-card.locked.shake{animation:shake .4s ease}
+.pack-card.locked.unlocking{filter:none;opacity:1;animation:unlockPop .9s cubic-bezier(.3,1.6,.5,1) forwards;outline-color:var(--c-green)}
+.pack-card.locked.unlocking .p-emoji{opacity:1}
+.pack-card.locked.unlocking .p-lock{animation:lockFly .9s ease forwards}
+@keyframes unlockPop{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-2deg)}100%{transform:scale(1.04)}}
+@keyframes lockFly{0%{transform:translate(-50%,-72%)}100%{transform:translate(-50%,-260%) rotate(30deg);opacity:0}}
+@media (prefers-reduced-motion: reduce){.pack-card.locked.unlockable,.pack-card.locked.unlockable .p-lock{animation:none}}
+.result-key{
+  font-size:1rem;font-weight:900;color:#7a5a12;margin:0 auto 10px;line-height:1.5;
+  background:linear-gradient(135deg,#fff3c4,#ffe9a8);border-radius:14px;padding:8px 16px;display:inline-block;animation:pop .5s ease;
+}
+
 /* ----- language shelves: Chinese games vs English games ----- */
 .lang-section{max-width:880px;margin:0 auto 26px}
 .lang-section.lang-zh{

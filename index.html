@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=20260903c" />
+  <link rel="stylesheet" href="css/styles.css?v=20260903d" />
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
@@ -34,6 +34,11 @@
       <div id="quest-card" class="quest-card">
         <div class="quest-head">🎯 Today's Quests 今日任務<span id="quest-streak" class="quest-streak"></span></div>
         <div id="quest-rows" class="quest-rows"><!-- quest rows injected --></div>
+      </div>
+
+      <div id="key-card" class="key-card hidden">
+        <div class="key-head">🔑 Keys 鑰匙：<span id="home-keys" class="key-count">0</span></div>
+        <div id="key-msg" class="key-msg"></div>
       </div>
 
       <h2 class="section-title">Choose your challenge</h2>
@@ -111,6 +116,7 @@
       <div id="result-best" class="result-best"></div>
       <div id="result-coins" class="result-coins"></div>
       <div id="result-quests" class="result-quests hidden"></div>
+      <div id="result-key" class="result-key hidden"></div>
       <div class="results-buttons">
         <button id="play-again" class="big-btn green">🔁 Play again</button>
         <button id="go-prizes" class="big-btn purple">🎁 Prizes</button>
@@ -270,6 +276,14 @@
         </div>
 
         <div class="card">
+          <h3>🔑 遊戲解鎖</h3>
+          <p class="hint" id="unlock-status"></p>
+          <button id="unlock-all" class="ghost-btn">🔓 全部解鎖</button>
+          <button id="lock-all" class="ghost-btn">🔒 全部重新鎖上（鑰匙歸零）</button>
+          <p class="hint">新的小遊戲一開始是鎖住的。任何遊戲拿到 ⭐⭐ 以上就得到一把鑰匙，一天最多兩把；鑰匙用來解鎖小朋友自己選的遊戲。</p>
+        </div>
+
+        <div class="card">
           <h3>備份 / 還原</h3>
           <button id="export-btn" class="ghost-btn">⬇️ 匯出題庫 (備份)</button>
           <label class="ghost-btn file-label">⬆️ 匯入題庫
@@ -350,27 +364,27 @@
     </div>
   </section>
 
-  <script src="js/zh-data.js?v=20260903c"></script>
-  <script src="js/seed.js?v=20260903c"></script>
-  <script src="js/store.js?v=20260903c"></script>
-  <script src="js/audio.js?v=20260903c"></script>
-  <script src="js/voice.js?v=20260903c"></script>
-  <script src="js/confetti.js?v=20260903c"></script>
-  <script src="js/results.js?v=20260903c"></script>
-  <script src="js/game.js?v=20260903c"></script>
-  <script src="js/write.js?v=20260903c"></script>
-  <script src="js/mini.js?v=20260903c"></script>
-  <script src="js/build.js?v=20260903c"></script>
-  <script src="js/whack.js?v=20260903c"></script>
-  <script src="js/match.js?v=20260903c"></script>
-  <script src="js/bingo.js?v=20260903c"></script>
-  <script src="js/order.js?v=20260903c"></script>
-  <script src="js/morph.js?v=20260903c"></script>
-  <script src="js/flash.js?v=20260903c"></script>
-  <script src="js/hunt.js?v=20260903c"></script>
-  <script src="js/garden.js?v=20260903c"></script>
-  <script src="js/prizes.js?v=20260903c"></script>
-  <script src="js/editor.js?v=20260903c"></script>
-  <script src="js/main.js?v=20260903c"></script>
+  <script src="js/zh-data.js?v=20260903d"></script>
+  <script src="js/seed.js?v=20260903d"></script>
+  <script src="js/store.js?v=20260903d"></script>
+  <script src="js/audio.js?v=20260903d"></script>
+  <script src="js/voice.js?v=20260903d"></script>
+  <script src="js/confetti.js?v=20260903d"></script>
+  <script src="js/results.js?v=20260903d"></script>
+  <script src="js/game.js?v=20260903d"></script>
+  <script src="js/write.js?v=20260903d"></script>
+  <script src="js/mini.js?v=20260903d"></script>
+  <script src="js/build.js?v=20260903d"></script>
+  <script src="js/whack.js?v=20260903d"></script>
+  <script src="js/match.js?v=20260903d"></script>
+  <script src="js/bingo.js?v=20260903d"></script>
+  <script src="js/order.js?v=20260903d"></script>
+  <script src="js/morph.js?v=20260903d"></script>
+  <script src="js/flash.js?v=20260903d"></script>
+  <script src="js/hunt.js?v=20260903d"></script>
+  <script src="js/garden.js?v=20260903d"></script>
+  <script src="js/prizes.js?v=20260903d"></script>
+  <script src="js/editor.js?v=20260903d"></script>
+  <script src="js/main.js?v=20260903d"></script>
 </body>
 </html>

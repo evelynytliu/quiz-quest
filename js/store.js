@@ -619,7 +619,7 @@ window.Store = (function () {
     savePlayers(getPlayers().filter(n => n !== name));
     const all = allBest();
     if (all[name]) { delete all[name]; saveBest(all); }       // drop their scores too
-    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY, NAME_KEY, ACT_KEY, QUEST_KEY, CHARS_KEY].forEach(k => {   // and their data
+    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY, NAME_KEY, ACT_KEY, QUEST_KEY, CHARS_KEY, UNLOCK_KEY].forEach(k => {   // and their data
       const o = readJSON(k, {});
       if (o[name] != null) { delete o[name]; writeJSON(k, o); }
     });
@@ -787,6 +787,63 @@ window.Store = (function () {
     return all[k][ch];
   }
 
+  /* ---------- game unlocks (per player) ----------
+     The mini-games start locked. A round finished with two stars or more
+     earns a key 🔑 (at most KEYS_PER_DAY a day), and a key opens whichever
+     locked game the child picks — so new games arrive a couple at a time,
+     and each one is something they chose and worked for. */
+  const UNLOCK_KEY = 'milesQuiz.unlock.v1';
+  const KEYS_PER_DAY = 2;
+  const LOCKED_GAMES = ['zh-build', 'zh-whack', 'zh-twins', 'zh-match', 'zh-bingo', 'zh-order',
+    'zh-morph', 'zh-flash', 'zh-hunt', 'zh-count', 'zh-opposites', 'zh-garden'];
+  function unlockState() {
+    const st = readJSON(UNLOCK_KEY, {})[playerKey()] || {};
+    return { keys: st.keys || 0, unlocked: st.unlocked || [], today: st.today || { date: '', earned: 0 } };
+  }
+  function saveUnlockState(st) {
+    const all = readJSON(UNLOCK_KEY, {});
+    all[playerKey()] = st;
+    writeJSON(UNLOCK_KEY, all);
+  }
+  function isLocked(packId) {
+    return LOCKED_GAMES.indexOf(packId) >= 0 && unlockState().unlocked.indexOf(packId) < 0;
+  }
+  function lockedGames() { return LOCKED_GAMES.filter(isLocked); }
+  function getKeys() { return unlockState().keys; }
+  // keys still earnable today
+  function keysLeftToday() {
+    const st = unlockState();
+    return KEYS_PER_DAY - (st.today.date === todayStr() ? st.today.earned : 0);
+  }
+  // a good round earns a key (daily cap); returns true when one was earned
+  function earnKey() {
+    if (!lockedGames().length) return false;
+    const st = unlockState();
+    if (st.today.date !== todayStr()) st.today = { date: todayStr(), earned: 0 };
+    if (st.today.earned >= KEYS_PER_DAY) return false;
+    st.today.earned++;
+    st.keys++;
+    saveUnlockState(st);
+    return true;
+  }
+  // spend a key on a game; returns true when it was unlocked
+  function unlockGame(packId) {
+    const st = unlockState();
+    if (!isLocked(packId) || st.keys <= 0) return false;
+    st.keys--;
+    st.unlocked.push(packId);
+    saveUnlockState(st);
+    return true;
+  }
+  function unlockAll() {
+    const st = unlockState();
+    st.unlocked = LOCKED_GAMES.slice();
+    saveUnlockState(st);
+  }
+  function lockAll() {
+    saveUnlockState({ keys: 0, unlocked: [], today: { date: '', earned: 0 } });
+  }
+
   /* ---------- best scores (per player) ---------- */
   function allBest() { try { return JSON.parse(localStorage.getItem(SCORE_KEY) || '{}'); } catch (e) { return {}; } }
   function saveBest(all) { try { localStorage.setItem(SCORE_KEY, JSON.stringify(all)); } catch (e) {} }
@@ -816,6 +873,7 @@ window.Store = (function () {
     getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy,
     getWriteStars, setWriteStars, getWriteName, setWriteName,
     logRound, logWrite, getActivity, getActivityFor, getPlayStreak,
-    getQuests, bumpQuest
+    getQuests, bumpQuest,
+    isLocked, lockedGames, getKeys, keysLeftToday, earnKey, unlockGame, unlockAll, lockAll, KEYS_PER_DAY
   };
 })();

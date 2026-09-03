@@ -71,6 +71,20 @@
     grids.zh.innerHTML = ''; grids.en.innerHTML = '';
     const thirsty = Store.dueChars().length;
     const plants = Object.keys(Store.getCharStats()).length;
+
+    // keys: shown while there are still games to open
+    const keys = Store.getKeys();
+    const lockedLeft = Store.lockedGames().length;
+    const keyCard = document.getElementById('key-card');
+    keyCard.classList.toggle('hidden', !lockedLeft);
+    document.getElementById('home-keys').textContent = keys;
+    const left = Store.keysLeftToday();
+    document.getElementById('key-msg').textContent = keys
+      ? '👆 Tap a locked game to open it! 點鎖住的遊戲就能打開'
+      : left > 0
+        ? 'Get ⭐⭐ in any game to earn a key 任何遊戲拿兩顆星就有鑰匙 (' + left + ' more today)'
+        : 'No more keys today — come back tomorrow! 今天的鑰匙拿完了，明天再來';
+
     Store.getPacks().forEach(p => {
       const count = Store.countFor(p.id);
       if (!p.generated && count === 0) return; // hide empty custom packs
@@ -84,9 +98,48 @@
         <span class="p-name">${escapeHtml(p.name)}</span>
         <span class="p-count">${sub}${best ? ' · 🏅' + best : ''}</span>`;
       if (p.id === 'zh-garden' && thirsty) card.classList.add('thirsty');
-      card.addEventListener('click', () => { Sfx.resume(); Sfx.tap(); launchPack(p.id); });
+      if (Store.isLocked(p.id)) {
+        card.classList.add('locked');
+        if (keys > 0) card.classList.add('unlockable');
+        card.querySelector('.p-count').textContent = keys > 0 ? '🔑 tap to unlock 點我解鎖' : '🔒 needs a key 要一把鑰匙';
+        const lock = document.createElement('span');
+        lock.className = 'p-lock'; lock.textContent = keys > 0 ? '🔓' : '🔒';
+        card.appendChild(lock);
+        card.addEventListener('click', () => { Sfx.resume(); tryUnlock(p, card); });
+      } else {
+        card.addEventListener('click', () => { Sfx.resume(); Sfx.tap(); launchPack(p.id); });
+      }
       grids[lang].appendChild(card);
     });
+  }
+
+  /* ---------- unlocking ----------
+     With a key: the padlock pops, the card lights up and the game opens.
+     Without one: a little teaser of what's inside, and how to earn a key. */
+  let unlocking = false;
+  function tryUnlock(pack, card) {
+    if (unlocking) return;
+    const g = GAMES[pack.id] || {};
+    if (Store.getKeys() <= 0) {
+      Sfx.tap();
+      card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+      const left = Store.keysLeftToday();
+      document.getElementById('key-msg').textContent = '🔒 ' + pack.name + ' — ' + (g.desc || '')
+        + (left > 0 ? ' Get ⭐⭐ in any game for a key!' : ' No more keys today, try tomorrow!');
+      Sfx.speak(pack.name.replace(/[^\x00-\x7f]+/g, '').trim() + '. ' + (g.desc || '')
+        + (left > 0 ? ' Get two stars in any game to earn a key!' : ' Come back tomorrow for more keys!'));
+      return;
+    }
+    if (!Store.unlockGame(pack.id)) return;
+    unlocking = true;
+    card.classList.add('unlocking');
+    card.querySelector('.p-lock').textContent = '🔓';
+    card.querySelector('.p-count').textContent = '✨ Unlocked! 解鎖了！';
+    Sfx.fanfare(); Sfx.coin();
+    Confetti.burst(80, card.getBoundingClientRect().top + 60);
+    Confetti.emojiBurst(['🔑', '✨', '🌟'], 16);
+    Sfx.speak('Unlocked! ' + pack.name.replace(/[^\x00-\x7f]+/g, '').trim() + '!');
+    setTimeout(() => { unlocking = false; renderHome(); launchPack(pack.id); }, 1500);
   }
 
   /* ---------- launching ----------
@@ -132,7 +185,7 @@
 
   function launchPack(packId) {
     const pack = Store.getPack(packId);
-    if (!pack) return;
+    if (!pack || Store.isLocked(packId)) return;
     if (pack.generated) {
       const g = GAMES[packId];
       if (!g) return;
@@ -241,6 +294,20 @@
     });
   }
 
+  /* ---------- parent: unlock switches ---------- */
+  function renderUnlockStatus() {
+    const el = document.getElementById('unlock-status');
+    if (!el) return;
+    const locked = Store.lockedGames().length;
+    el.textContent = (Store.getCurrentPlayer() || '（未命名玩家）') + '：還有 ' + locked + ' 個遊戲鎖住，手上有 ' + Store.getKeys() + ' 把鑰匙';
+  }
+  document.getElementById('unlock-all').addEventListener('click', () => {
+    Store.unlockAll(); renderUnlockStatus();
+  });
+  document.getElementById('lock-all').addEventListener('click', () => {
+    if (confirm('把全部小遊戲重新鎖上，鑰匙歸零？')) { Store.lockAll(); renderUnlockStatus(); }
+  });
+
   function checkGate() {
     const val = parseInt(document.getElementById('gate-answer').value, 10);
     if (val === gateAnswer) {
@@ -248,6 +315,7 @@
       if (gateThen) { const fn = gateThen; gateThen = null; fn(); return; }
       Editor.refresh();
       renderReport();
+      renderUnlockStatus();
       showScreen('parent');
     } else {
       document.getElementById('gate-error').classList.remove('hidden');
