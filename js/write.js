@@ -41,7 +41,7 @@ window.Writer = (function () {
     '牛': { en: 'cow', pic: '🐮' },    '羊': { en: 'sheep', pic: '🐑' },
     '馬': { en: 'horse', pic: '🐴' },  '鳥': { en: 'bird', pic: '🐦' },
     '魚': { en: 'fish', pic: '🐟' },   '犬': { en: 'dog', pic: '🐶' },
-    '兔': { en: 'rabbit', pic: '🐰' }, '虫': { en: 'bug', pic: '🐛' },
+    '兔': { en: 'rabbit', pic: '🐰' }, '蟲': { en: 'bug', pic: '🐛' },
     '白': { en: 'white', pic: '⚪' },  '黑': { en: 'black', pic: '⚫' },
     '紅': { en: 'red', pic: '🔴' },    '黃': { en: 'yellow', pic: '🟡' },
     '藍': { en: 'blue', pic: '🔵' },   '綠': { en: 'green', pic: '🟢' },
@@ -56,7 +56,7 @@ window.Writer = (function () {
     { name: '小人島 People Island', emoji: '🚶', chars: ['人', '大', '小', '上', '下', '中', '出', '入', '左', '右'] },
     { name: '寶貝島 Treasure Island', emoji: '👑', chars: ['口', '手', '心', '王', '子', '目', '耳', '足', '牙', '毛'] },
     { name: '家人島 Family Island', emoji: '👨‍👩‍👧', chars: ['爸', '媽', '哥', '姐', '弟', '妹', '我', '你'] },
-    { name: '動物島 Animal Island', emoji: '🐾', chars: ['牛', '羊', '馬', '鳥', '魚', '犬', '兔', '虫'] },
+    { name: '動物島 Animal Island', emoji: '🐾', chars: ['牛', '羊', '馬', '鳥', '魚', '犬', '兔', '蟲'] },
     { name: '顏色島 Colour Island', emoji: '🎨', chars: ['白', '黑', '紅', '黃', '藍', '綠', '光', '色'] }
   ];
 

@@ -32,6 +32,7 @@ window.Store = (function () {
     mergeSeed();      // pull in any new default questions/packs added since last time
     removeRetiredPacks();
     relaxTimes();
+    migrateWriteChars();
     migratePlayers();
     return data;
   }
@@ -45,6 +46,28 @@ window.Store = (function () {
     data.questions.forEach(q => { if (!q.time || q.time < 30) { q.time = 30; changed = true; } });
     if (changed) save();
     try { localStorage.setItem(TIME30_KEY, '1'); } catch (e) {}
+  }
+
+  // characters whose form was corrected after release: move any stars the
+  // child already earned onto the character we now teach
+  const CHAR_FIX_KEY = 'milesQuiz.charFix.v1';
+  const CHAR_FIXES = { '虫': '蟲' };
+  function migrateWriteChars() {
+    try { if (localStorage.getItem(CHAR_FIX_KEY)) return; } catch (e) {}
+    const all = readJSON(WRITE_KEY, {});
+    let changed = false;
+    Object.keys(all).forEach(player => {
+      const stars = all[player] || {};
+      Object.keys(CHAR_FIXES).forEach(from => {
+        const to = CHAR_FIXES[from];
+        if (stars[from] == null) return;
+        stars[to] = Math.max(stars[to] || 0, stars[from]);
+        delete stars[from];
+        changed = true;
+      });
+    });
+    if (changed) writeJSON(WRITE_KEY, all);
+    try { localStorage.setItem(CHAR_FIX_KEY, '1'); } catch (e) {}
   }
 
   // default packs that were retired from the seed: clear them off devices
