@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=20260903" />
+  <link rel="stylesheet" href="css/styles.css?v=20260903b" />
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
@@ -221,6 +221,21 @@
     </div>
   </div>
 
+  <!-- ============ MY NAME (modal, grown-ups only) ============ -->
+  <div id="name-modal" class="modal hidden">
+    <div class="modal-card">
+      <button class="modal-close" data-close="name-modal">✕</button>
+      <h2>🌟 我的名字</h2>
+      <p>輸入小朋友的中文名字，就能在寫字遊戲裡一筆一畫練習自己的名字。</p>
+      <input id="name-input" type="text" maxlength="5" placeholder="例：陳小明" autocomplete="off" />
+      <p id="name-status" class="name-status" aria-live="polite"></p>
+      <div class="name-actions">
+        <button id="name-save" class="big-btn green">💾 儲存</button>
+        <button id="name-clear" class="ghost-btn">清除名字</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ PARENT GATE (modal) ============ -->
   <div id="gate-modal" class="modal hidden">
     <div class="modal-card">
@@ -335,29 +350,27 @@
     </div>
   </section>
 
-  <script src="js/vendor/hanzi-writer.min.js?v=20260903"></script>
-  <script src="js/zh-strokes.js?v=20260903"></script>
-  <script src="js/zh-data.js?v=20260903"></script>
-  <script src="js/seed.js?v=20260903"></script>
-  <script src="js/store.js?v=20260903"></script>
-  <script src="js/audio.js?v=20260903"></script>
-  <script src="js/voice.js?v=20260903"></script>
-  <script src="js/confetti.js?v=20260903"></script>
-  <script src="js/results.js?v=20260903"></script>
-  <script src="js/game.js?v=20260903"></script>
-  <script src="js/write.js?v=20260903"></script>
-  <script src="js/mini.js?v=20260903"></script>
-  <script src="js/build.js?v=20260903"></script>
-  <script src="js/whack.js?v=20260903"></script>
-  <script src="js/match.js?v=20260903"></script>
-  <script src="js/bingo.js?v=20260903"></script>
-  <script src="js/order.js?v=20260903"></script>
-  <script src="js/morph.js?v=20260903"></script>
-  <script src="js/flash.js?v=20260903"></script>
-  <script src="js/hunt.js?v=20260903"></script>
-  <script src="js/garden.js?v=20260903"></script>
-  <script src="js/prizes.js?v=20260903"></script>
-  <script src="js/editor.js?v=20260903"></script>
-  <script src="js/main.js?v=20260903"></script>
+  <script src="js/zh-data.js?v=20260903b"></script>
+  <script src="js/seed.js?v=20260903b"></script>
+  <script src="js/store.js?v=20260903b"></script>
+  <script src="js/audio.js?v=20260903b"></script>
+  <script src="js/voice.js?v=20260903b"></script>
+  <script src="js/confetti.js?v=20260903b"></script>
+  <script src="js/results.js?v=20260903b"></script>
+  <script src="js/game.js?v=20260903b"></script>
+  <script src="js/write.js?v=20260903b"></script>
+  <script src="js/mini.js?v=20260903b"></script>
+  <script src="js/build.js?v=20260903b"></script>
+  <script src="js/whack.js?v=20260903b"></script>
+  <script src="js/match.js?v=20260903b"></script>
+  <script src="js/bingo.js?v=20260903b"></script>
+  <script src="js/order.js?v=20260903b"></script>
+  <script src="js/morph.js?v=20260903b"></script>
+  <script src="js/flash.js?v=20260903b"></script>
+  <script src="js/hunt.js?v=20260903b"></script>
+  <script src="js/garden.js?v=20260903b"></script>
+  <script src="js/prizes.js?v=20260903b"></script>
+  <script src="js/editor.js?v=20260903b"></script>
+  <script src="js/main.js?v=20260903b"></script>
 </body>
 </html>

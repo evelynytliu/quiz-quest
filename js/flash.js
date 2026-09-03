@@ -14,11 +14,24 @@ window.Flash = (function () {
   let ui = {};
 
   function strokeCount(ch) {
-    const d = window.ZH_STROKES[ch];
+    const d = Writer.charData(ch);
     return d && d.strokes ? d.strokes.length : 0;
   }
 
+  // the engine and stroke data load on demand (shared with Write Quest)
   function open(lv) {
+    const stage = Mini.open(api, '⚡ Flash Write 閃字記憶');
+    stage.innerHTML = '<div class="mini-msg">⏳ Loading… 準備中</div>';
+    const token = ++openToken;
+    Promise.all([Writer.ensureEngine(), Writer.ensureBase()]).then(() => {
+      if (token === openToken) start(lv);
+    }).catch(() => {
+      if (token === openToken) stage.innerHTML = '<div class="mini-msg">😅 載入失敗，請檢查網路再試一次</div>';
+    });
+  }
+  let openToken = 0;
+
+  function start(lv) {
     level = lv || 1;
     const all = Object.keys(window.ZH_STROKES || {}).filter(ch => window.ZH.word(ch));
     const bank = all.filter(ch => {
@@ -100,7 +113,7 @@ window.Flash = (function () {
       showCharacter: false, showOutline: false,
       strokeColor: '#e8472f', drawingColor: '#4f88d6', drawingWidth: 22,
       showHintAfterMisses: 3, highlightOnComplete: true, highlightColor: '#f3c64c',
-      charDataLoader: (c, done) => done(window.ZH_STROKES[c])
+      charDataLoader: (c, done) => done(Writer.charData(c))
     });
     Sfx.speakZh(w.ch);
     writer.quiz({

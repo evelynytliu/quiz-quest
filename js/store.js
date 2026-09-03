@@ -596,7 +596,7 @@ window.Store = (function () {
     savePlayers(getPlayers().filter(n => n !== name));
     const all = allBest();
     if (all[name]) { delete all[name]; saveBest(all); }       // drop their scores too
-    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY, ACT_KEY, QUEST_KEY, CHARS_KEY].forEach(k => {   // and their data
+    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY, NAME_KEY, ACT_KEY, QUEST_KEY, CHARS_KEY].forEach(k => {   // and their data
       const o = readJSON(k, {});
       if (o[name] != null) { delete o[name]; writeJSON(k, o); }
     });
@@ -741,6 +741,16 @@ window.Store = (function () {
     return completed;
   }
 
+  /* ---------- the child's own name for Write Quest (per player) ---------- */
+  const NAME_KEY = 'milesQuiz.writeName.v1';
+  function getWriteName() { return readJSON(NAME_KEY, {})[playerKey()] || ''; }
+  function setWriteName(name) {
+    const all = readJSON(NAME_KEY, {});
+    all[playerKey()] = String(name || '').replace(/\s+/g, '').slice(0, 5);
+    writeJSON(NAME_KEY, all);
+    return all[playerKey()];
+  }
+
   /* ---------- Write Quest stars (per player) ----------
      Stars are a grade for how carefully the character was traced (3 = no
      wrong strokes). The best grade ever earned is kept per character. */
@@ -781,7 +791,7 @@ window.Store = (function () {
     getBest, setBest, uid,
     getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
     getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy,
-    getWriteStars, setWriteStars,
+    getWriteStars, setWriteStars, getWriteName, setWriteName,
     logRound, logWrite, getActivity, getActivityFor, getPlayStreak,
     getQuests, bumpQuest
   };

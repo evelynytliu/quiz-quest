@@ -3,6 +3,7 @@
 (function () {
   const ROUND_SIZE = 10;
   let gateAnswer = 0;
+  let gateThen = null;          // what to do once a grown-up has answered
   const lastLevel = {};          // remembered per game for "Play again"
 
   const screens = {
@@ -185,7 +186,11 @@
   });
 
   /* ---------- parent gate ---------- */
-  function openGate() {
+  // other screens (e.g. setting a child's name) can ask for the same check
+  window.askParent = function (then) { openGate(then); };
+
+  function openGate(then) {
+    gateThen = typeof then === 'function' ? then : null;
     const a = 6 + Math.floor(Math.random() * 4);   // 6..9
     const b = 6 + Math.floor(Math.random() * 4);
     gateAnswer = a * b;
@@ -196,7 +201,7 @@
     setTimeout(() => document.getElementById('gate-answer').focus(), 50);
   }
 
-  document.getElementById('open-parent').addEventListener('click', openGate);
+  document.getElementById('open-parent').addEventListener('click', () => openGate(null));
   document.getElementById('gate-submit').addEventListener('click', checkGate);
   document.getElementById('gate-answer').addEventListener('keydown', e => { if (e.key === 'Enter') checkGate(); });
 
@@ -240,6 +245,7 @@
     const val = parseInt(document.getElementById('gate-answer').value, 10);
     if (val === gateAnswer) {
       closeModal('gate-modal');
+      if (gateThen) { const fn = gateThen; gateThen = null; fn(); return; }
       Editor.refresh();
       renderReport();
       showScreen('parent');
