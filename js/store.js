@@ -278,171 +278,17 @@ window.Store = (function () {
   }
 
   /* ---------- character quest: generate Chinese reading questions ----------
-     Word bank for kids who can't read characters yet. Three game modes:
+     Word banks live in js/zh-data.js (window.ZH) and are shared by every
+     Chinese game. Three game modes here:
        - zhpic:  see the character (spoken aloud) -> tap the matching picture
        - see:    see a picture + hear the word    -> tap the matching character
        - listen: hear the word only               -> tap the matching character
-     No reading required: everything is taught by sound and pictures.
-     (Pictures stick to older emoji so they render on more devices.) */
-  const ZH_WORDS = [
-    /* level 1 — first words */
-    { ch: '一', en: 'one',   pic: '1️⃣', lv: 1 },
-    { ch: '二', en: 'two',   pic: '2️⃣', lv: 1 },
-    { ch: '三', en: 'three', pic: '3️⃣', lv: 1 },
-    { ch: '日', en: 'sun',   pic: '☀️', lv: 1 },
-    { ch: '月', en: 'moon',  pic: '🌙', lv: 1 },
-    { ch: '水', en: 'water', pic: '💧', lv: 1 },
-    { ch: '火', en: 'fire',  pic: '🔥', lv: 1 },
-    { ch: '山', en: 'mountain', pic: '⛰️', lv: 1 },
-    { ch: '木', en: 'tree',  pic: '🌳', lv: 1 },
-    { ch: '口', en: 'mouth', pic: '👄', lv: 1 },
-    { ch: '手', en: 'hand',  pic: '✋', lv: 1 },
-    { ch: '人', en: 'person', pic: '🚶', lv: 1 },
-    { ch: '大', en: 'big',   pic: '',   lv: 1 },
-    { ch: '小', en: 'small', pic: '',   lv: 1 },
-    /* level 2 — more words */
-    { ch: '四', en: 'four',  pic: '4️⃣', lv: 2 },
-    { ch: '五', en: 'five',  pic: '5️⃣', lv: 2 },
-    { ch: '狗', en: 'dog',   pic: '🐶', lv: 2 },
-    { ch: '貓', en: 'cat',   pic: '🐱', lv: 2 },
-    { ch: '魚', en: 'fish',  pic: '🐟', lv: 2 },
-    { ch: '鳥', en: 'bird',  pic: '🐦', lv: 2 },
-    { ch: '牛', en: 'cow',   pic: '🐮', lv: 2 },
-    { ch: '馬', en: 'horse', pic: '🐴', lv: 2 },
-    { ch: '羊', en: 'sheep', pic: '🐑', lv: 2 },
-    { ch: '豬', en: 'pig',   pic: '🐷', lv: 2 },
-    { ch: '雞', en: 'chicken', pic: '🐔', lv: 2 },
-    { ch: '鴨', en: 'duck',  pic: '🦆', lv: 2 },
-    { ch: '熊', en: 'bear',  pic: '🐻', lv: 2 },
-    { ch: '虎', en: 'tiger', pic: '🐯', lv: 2 },
-    { ch: '花', en: 'flower', pic: '🌸', lv: 2 },
-    { ch: '雨', en: 'rain',  pic: '🌧️', lv: 2 },
-    { ch: '星', en: 'star',  pic: '⭐', lv: 2 },
-    { ch: '車', en: 'car',   pic: '🚗', lv: 2 },
-    { ch: '家', en: 'home',  pic: '🏠', lv: 2 },
-    { ch: '球', en: 'ball',  pic: '⚽', lv: 2 },
-    { ch: '果', en: 'fruit', pic: '🍎', lv: 2 },
-    { ch: '好', en: 'good',  pic: '👍', lv: 2 },
-    { ch: '上', en: 'up',    pic: '',   lv: 2 },
-    { ch: '下', en: 'down',  pic: '',   lv: 2 },
-    { ch: '天', en: 'sky',   pic: '',   lv: 2 },
-    /* level 3 — word master */
-    { ch: '六', en: 'six',   pic: '6️⃣', lv: 3 },
-    { ch: '七', en: 'seven', pic: '7️⃣', lv: 3 },
-    { ch: '八', en: 'eight', pic: '8️⃣', lv: 3 },
-    { ch: '九', en: 'nine',  pic: '9️⃣', lv: 3 },
-    { ch: '十', en: 'ten',   pic: '🔟', lv: 3 },
-    { ch: '兔', en: 'rabbit', pic: '🐰', lv: 3 },
-    { ch: '蟲', en: 'bug',   pic: '🐛', lv: 3 },
-    { ch: '草', en: 'grass', pic: '🌱', lv: 3 },
-    { ch: '雪', en: 'snow',  pic: '❄️', lv: 3 },
-    { ch: '雲', en: 'cloud', pic: '☁️', lv: 3 },
-    { ch: '門', en: 'door',  pic: '🚪', lv: 3 },
-    { ch: '書', en: 'book',  pic: '📖', lv: 3 },
-    { ch: '筆', en: 'pen',   pic: '✏️', lv: 3 },
-    { ch: '蛋', en: 'egg',   pic: '🥚', lv: 3 },
-    { ch: '米', en: 'rice',  pic: '🍚', lv: 3 },
-    { ch: '瓜', en: 'melon', pic: '🍉', lv: 3 },
-    { ch: '目', en: 'eye',   pic: '👀', lv: 3 },
-    { ch: '耳', en: 'ear',   pic: '👂', lv: 3 },
-    { ch: '心', en: 'heart', pic: '❤️', lv: 3 },
-    { ch: '王', en: 'king',  pic: '👑', lv: 3 },
-    { ch: '象', en: 'elephant', pic: '🐘', lv: 3 },
-    { ch: '猴', en: 'monkey', pic: '🐵', lv: 3 },
-    { ch: '龍', en: 'dragon', pic: '🐉', lv: 3 },
-    { ch: '蛇', en: 'snake', pic: '🐍', lv: 3 },
-    { ch: '龜', en: 'turtle', pic: '🐢', lv: 3 },
-    { ch: '蝶', en: 'butterfly', pic: '🦋', lv: 3 },
-    { ch: '茶', en: 'tea',   pic: '🍵', lv: 3 },
-    { ch: '肉', en: 'meat',  pic: '🍖', lv: 3 },
-    { ch: '電', en: 'electricity', pic: '⚡', lv: 3 },
-    { ch: '風', en: 'wind',  pic: '🌬️', lv: 3 },
-    { ch: '燈', en: 'lamp',  pic: '💡', lv: 3 },
-    { ch: '白', en: 'white', pic: '⚪', lv: 3 },
-    { ch: '黑', en: 'black', pic: '⚫', lv: 3 },
-    { ch: '紅', en: 'red',   pic: '🔴', lv: 3 },
-    { ch: '藍', en: 'blue',  pic: '🔵', lv: 3 },
-    { ch: '鞋', en: 'shoe',  pic: '👟', lv: 3 },
-    { ch: '愛', en: 'love',  pic: '💖', lv: 3 }
-  ];
+     No reading required: everything is taught by sound and pictures. */
+  const ZH_WORDS = window.ZH.WORDS;
+  const ZH_WORDS2 = window.ZH.WORDS2;
+  const ZH_SENTS = window.ZH.SENTS;
+  const zhSameSound = window.ZH.sameSound;
 
-  /* characters that sound exactly the same (mù) — keep them out of each
-     other's answer rows in the sound-based modes, where the ear can't
-     tell them apart */
-  const ZH_HOMOPHONES = [['木', '目']];
-  function zhSameSound(a, b) {
-    return ZH_HOMOPHONES.some(g => g.indexOf(a) >= 0 && g.indexOf(b) >= 0);
-  }
-
-  /* ---------- word quest: two-character words ----------
-     Same three game modes as Character Quest, but with 詞語 instead of
-     single characters. Two-character words all sound different from each
-     other, so Mandarin's many homophones stop being a problem — and kids
-     learn characters the way they're actually used. */
-  const ZH_WORDS2 = [
-    /* level 1 — first words */
-    { ch: '太陽', en: 'sun',      pic: '☀️', lv: 1 },
-    { ch: '月亮', en: 'moon',     pic: '🌙', lv: 1 },
-    { ch: '星星', en: 'star',     pic: '⭐', lv: 1 },
-    { ch: '小狗', en: 'dog',      pic: '🐶', lv: 1 },
-    { ch: '小貓', en: 'cat',      pic: '🐱', lv: 1 },
-    { ch: '小鳥', en: 'bird',     pic: '🐦', lv: 1 },
-    { ch: '大象', en: 'elephant', pic: '🐘', lv: 1 },
-    { ch: '老虎', en: 'tiger',    pic: '🐯', lv: 1 },
-    { ch: '兔子', en: 'rabbit',   pic: '🐰', lv: 1 },
-    { ch: '火車', en: 'train',    pic: '🚂', lv: 1 },
-    { ch: '汽車', en: 'car',      pic: '🚗', lv: 1 },
-    { ch: '蘋果', en: 'apple',    pic: '🍎', lv: 1 },
-    { ch: '香蕉', en: 'banana',   pic: '🍌', lv: 1 },
-    { ch: '雨傘', en: 'umbrella', pic: '☔', lv: 1 },
-    { ch: '房子', en: 'house',    pic: '🏠', lv: 1 },
-    /* level 2 — more words */
-    { ch: '恐龍', en: 'dinosaur', pic: '🦖', lv: 2 },
-    { ch: '熊貓', en: 'panda',    pic: '🐼', lv: 2 },
-    { ch: '猴子', en: 'monkey',   pic: '🐵', lv: 2 },
-    { ch: '鴨子', en: 'duck',     pic: '🦆', lv: 2 },
-    { ch: '青蛙', en: 'frog',     pic: '🐸', lv: 2 },
-    { ch: '烏龜', en: 'turtle',   pic: '🐢', lv: 2 },
-    { ch: '蜜蜂', en: 'bee',      pic: '🐝', lv: 2 },
-    { ch: '飛機', en: 'airplane', pic: '✈️', lv: 2 },
-    { ch: '下雨', en: 'rain',     pic: '🌧️', lv: 2 },
-    { ch: '雪人', en: 'snowman',  pic: '⛄', lv: 2 },
-    { ch: '彩虹', en: 'rainbow',  pic: '🌈', lv: 2 },
-    { ch: '眼睛', en: 'eyes',     pic: '👀', lv: 2 },
-    { ch: '耳朵', en: 'ear',      pic: '👂', lv: 2 },
-    { ch: '鼻子', en: 'nose',     pic: '👃', lv: 2 },
-    { ch: '嘴巴', en: 'mouth',    pic: '👄', lv: 2 },
-    { ch: '牛奶', en: 'milk',     pic: '🥛', lv: 2 },
-    { ch: '雞蛋', en: 'egg',      pic: '🥚', lv: 2 },
-    { ch: '西瓜', en: 'watermelon', pic: '🍉', lv: 2 },
-    { ch: '草莓', en: 'strawberry', pic: '🍓', lv: 2 },
-    { ch: '麵包', en: 'bread',    pic: '🍞', lv: 2 },
-    /* level 3 — word master */
-    { ch: '蝴蝶', en: 'butterfly', pic: '🦋', lv: 3 },
-    { ch: '蜘蛛', en: 'spider',   pic: '🕷️', lv: 3 },
-    { ch: '鯊魚', en: 'shark',    pic: '🦈', lv: 3 },
-    { ch: '海豚', en: 'dolphin',  pic: '🐬', lv: 3 },
-    { ch: '企鵝', en: 'penguin',  pic: '🐧', lv: 3 },
-    { ch: '獅子', en: 'lion',     pic: '🦁', lv: 3 },
-    { ch: '斑馬', en: 'zebra',    pic: '🦓', lv: 3 },
-    { ch: '火山', en: 'volcano',  pic: '🌋', lv: 3 },
-    { ch: '地球', en: 'Earth',    pic: '🌍', lv: 3 },
-    { ch: '火箭', en: 'rocket',   pic: '🚀', lv: 3 },
-    { ch: '足球', en: 'soccer ball', pic: '⚽', lv: 3 },
-    { ch: '籃球', en: 'basketball', pic: '🏀', lv: 3 },
-    { ch: '電話', en: 'telephone', pic: '📞', lv: 3 },
-    { ch: '電燈', en: 'lamp',     pic: '💡', lv: 3 },
-    { ch: '電視', en: 'TV',       pic: '📺', lv: 3 },
-    { ch: '書包', en: 'backpack', pic: '🎒', lv: 3 },
-    { ch: '鉛筆', en: 'pencil',   pic: '✏️', lv: 3 },
-    { ch: '剪刀', en: 'scissors', pic: '✂️', lv: 3 },
-    { ch: '帽子', en: 'hat',      pic: '🎩', lv: 3 },
-    { ch: '鞋子', en: 'shoes',    pic: '👟', lv: 3 },
-    { ch: '皇冠', en: 'crown',    pic: '👑', lv: 3 },
-    { ch: '禮物', en: 'present',  pic: '🎁', lv: 3 },
-    { ch: '蛋糕', en: 'cake',     pic: '🎂', lv: 3 },
-    { ch: '糖果', en: 'candy',    pic: '🍬', lv: 3 }
-  ];
 
   function makeZhQuestion(w, bank, level, packId) {
     const others = shuffle(bank.filter(x => x.ch !== w.ch).slice());
@@ -521,96 +367,6 @@ window.Store = (function () {
     return picks.map(w => makeZhQuestion(w, bank, level, 'zh-words'));
   }
 
-  /* ---------- silly sentences: funny short sentences for new readers ----------
-     Humour is the hook: a pig dancing or a snowman sipping hot tea makes a
-     5-7 year old want to know what the sentence says. Pictures are little
-     emoji scenes; every sentence is read aloud in Mandarin. */
-  const ZH_SENTS = [
-    /* level 1 — short & simple */
-    { ch: '貓咪愛魚',   en: 'The kitty loves fish',        pic: '🐱🐟', lv: 1 },
-    { ch: '狗狗開車',   en: 'The doggy drives a car',      pic: '🐶🚗', lv: 1 },
-    { ch: '豬在跳舞',   en: 'The pig is dancing',          pic: '🐷💃', lv: 1 },
-    { ch: '熊貓吃飯',   en: 'The panda eats rice',         pic: '🐼🍚', lv: 1 },
-    { ch: '魚會飛',     en: 'The fish can fly',            pic: '🐟✈️', lv: 1 },
-    { ch: '兔子唱歌',   en: 'The bunny sings a song',      pic: '🐰🎤', lv: 1 },
-    { ch: '老虎刷牙',   en: 'The tiger brushes its teeth', pic: '🐯🦷', lv: 1 },
-    { ch: '雞在看書',   en: 'The chicken is reading',      pic: '🐔📖', lv: 1 },
-    { ch: '馬吃蛋糕',   en: 'The horse eats cake',         pic: '🐴🎂', lv: 1 },
-    { ch: '下雨了',     en: 'It is raining',               pic: '🌧️☂️', lv: 1 },
-    { ch: '鴨子游泳',   en: 'The duck is swimming',        pic: '🦆🌊', lv: 1 },
-    { ch: '熊在睡覺',   en: 'The bear is sleeping',        pic: '🐻💤', lv: 1 },
-    { ch: '貓咪畫畫',   en: 'The kitty is painting',       pic: '🐱🎨', lv: 1 },
-    { ch: '鴨子坐船',   en: 'The duck rides a boat',       pic: '🦆⛵', lv: 1 },
-    { ch: '豬豬愛花',   en: 'The piggy loves flowers',     pic: '🐷🌸', lv: 1 },
-    { ch: '鳥在洗澡',   en: 'The bird takes a bath',       pic: '🐦🛁', lv: 1 },
-    { ch: '狗狗玩球',   en: 'The doggy plays ball',        pic: '🐶⚽', lv: 1 },
-    { ch: '熊吃麵',     en: 'The bear eats noodles',       pic: '🐻🍜', lv: 1 },
-    { ch: '魚看月亮',   en: 'The fish looks at the moon',  pic: '🐟🌙', lv: 1 },
-    { ch: '雞在跳舞',   en: 'The chicken is dancing',      pic: '🐔💃', lv: 1 },
-    { ch: '下雪了',     en: 'It is snowing',               pic: '🌨️❄️', lv: 1 },
-    { ch: '月亮笑了',   en: 'The moon is smiling',         pic: '🌙😊', lv: 1 },
-    /* level 2 — a little longer */
-    { ch: '恐龍打籃球', en: 'The dinosaur plays basketball', pic: '🦖🏀', lv: 2 },
-    { ch: '大象坐火車', en: 'The elephant rides the train',  pic: '🐘🚂', lv: 2 },
-    { ch: '獅子怕老鼠', en: 'The lion is scared of the mouse', pic: '🦁🐭', lv: 2 },
-    { ch: '猴子開飛機', en: 'The monkey flies a plane',      pic: '🐵✈️', lv: 2 },
-    { ch: '青蛙跳很高', en: 'The frog jumps very high',      pic: '🐸⬆️', lv: 2 },
-    { ch: '雪人喝熱茶', en: 'The snowman drinks hot tea',    pic: '⛄🍵', lv: 2 },
-    { ch: '星星眨眼睛', en: 'The stars are blinking',        pic: '🌟👀', lv: 2 },
-    { ch: '烏龜跑得快', en: 'The turtle runs fast',          pic: '🐢💨', lv: 2 },
-    { ch: '小狗愛洗澡', en: 'The puppy loves baths',         pic: '🐶🛁', lv: 2 },
-    { ch: '貓咪打電話', en: 'The kitty makes a phone call',  pic: '🐱📞', lv: 2 },
-    { ch: '蜜蜂住城堡', en: 'The bee lives in a castle',     pic: '🐝🏰', lv: 2 },
-    { ch: '熊愛吃蜂蜜', en: 'The bear loves honey',          pic: '🐻🍯', lv: 2 },
-    { ch: '鯊魚愛吃糖', en: 'The shark loves candy',         pic: '🦈🍬', lv: 2 },
-    { ch: '恐龍愛蛋糕', en: 'The dinosaur loves cake',       pic: '🦖🍰', lv: 2 },
-    { ch: '猴子吃香蕉', en: 'The monkey eats a banana',      pic: '🐵🍌', lv: 2 },
-    { ch: '老鼠愛起司', en: 'The mouse loves cheese',        pic: '🐭🧀', lv: 2 },
-    { ch: '青蛙拿雨傘', en: 'The frog holds an umbrella',    pic: '🐸☂️', lv: 2 },
-    { ch: '小豬蓋房子', en: 'The little pig builds a house', pic: '🐷🏠', lv: 2 },
-    { ch: '鯨魚噴水',   en: 'The whale spouts water',        pic: '🐳⛲', lv: 2 },
-    { ch: '貓頭鷹看書', en: 'The owl reads a book',          pic: '🦉📖', lv: 2 },
-    { ch: '小鳥住樹上', en: 'The bird lives in a tree',      pic: '🐦🌳', lv: 2 },
-    { ch: '蝸牛慢慢走', en: 'The snail walks slowly',        pic: '🐌⏰', lv: 2 },
-    { ch: '雪人怕太陽', en: 'The snowman fears the sun',     pic: '⛄☀️', lv: 2 },
-    { ch: '星星愛月亮', en: 'The star loves the moon',       pic: '🌟🌙', lv: 2 },
-    { ch: '恐龍騎馬',   en: 'The dinosaur rides a horse',    pic: '🦖🐴', lv: 2 },
-    { ch: '鬼怕黑',     en: 'The ghost is scared of the dark', pic: '👻🌑', lv: 2 },
-    { ch: '蛋糕飛走了', en: 'The cake flew away',            pic: '🎂🎈', lv: 2 },
-    { ch: '貓咪坐火箭', en: 'The kitty rides a rocket',      pic: '🐱🚀', lv: 2 },
-    { ch: '恐龍上學去', en: 'The dinosaur goes to school',   pic: '🦖🎒', lv: 2 },
-    { ch: '老虎喝汽水', en: 'The tiger drinks soda',         pic: '🐯🥤', lv: 2 },
-    { ch: '猴子戴眼鏡', en: 'The monkey wears glasses',      pic: '🐵👓', lv: 2 },
-    /* level 3 — the silliest ones */
-    { ch: '章魚穿八隻鞋', en: 'The octopus wears eight shoes',  pic: '🐙👟', lv: 3 },
-    { ch: '企鵝去海邊玩', en: 'The penguin goes to the beach',  pic: '🐧🏖️', lv: 3 },
-    { ch: '月亮吃了餅乾', en: 'The moon ate a cookie',          pic: '🌙🍪', lv: 3 },
-    { ch: '太陽戴墨鏡',   en: 'The sun wears sunglasses',       pic: '☀️🕶️', lv: 3 },
-    { ch: '恐龍害怕打針', en: 'The dinosaur is scared of shots', pic: '🦖💉', lv: 3 },
-    { ch: '火箭飛到月亮', en: 'The rocket flies to the moon',   pic: '🚀🌕', lv: 3 },
-    { ch: '小貓當國王',   en: 'The kitten becomes king',        pic: '🐱👑', lv: 3 },
-    { ch: '熊貓抱西瓜',   en: 'The panda hugs a watermelon',    pic: '🐼🍉', lv: 3 },
-    { ch: '機器人會唱歌', en: 'The robot can sing',             pic: '🤖🎵', lv: 3 },
-    { ch: '恐龍賣冰淇淋', en: 'The dinosaur sells ice cream',   pic: '🦖🍦', lv: 3 },
-    { ch: '聖誕老人游泳', en: 'Santa goes swimming',            pic: '🎅🌊', lv: 3 },
-    { ch: '青蛙王子唱歌', en: 'The frog prince sings',          pic: '🐸👑', lv: 3 },
-    { ch: '熊貓騎腳踏車', en: 'The panda rides a bike',         pic: '🐼🚲', lv: 3 },
-    { ch: '兔子愛紅蘿蔔', en: 'The bunny loves carrots',        pic: '🐰🥕', lv: 3 },
-    { ch: '螃蟹剪頭髮',   en: 'The crab gives haircuts',        pic: '🦀✂️', lv: 3 },
-    { ch: '大象學溜冰',   en: 'The elephant learns to skate',   pic: '🐘⛸️', lv: 3 },
-    { ch: '章魚彈鋼琴',   en: 'The octopus plays the piano',    pic: '🐙🎹', lv: 3 },
-    { ch: '獅子去剪頭髮', en: 'The lion gets a haircut',        pic: '🦁💈', lv: 3 },
-    { ch: '企鵝愛吃冰',   en: 'The penguin loves shaved ice',   pic: '🐧🍧', lv: 3 },
-    { ch: '外星人來地球', en: 'The alien visits Earth',         pic: '👽🌍', lv: 3 },
-    { ch: '鞋子會走路',   en: 'The shoes walk by themselves',   pic: '👟👣', lv: 3 },
-    { ch: '機器人吃電池', en: 'The robot eats batteries',       pic: '🤖🔋', lv: 3 },
-    { ch: '恐龍打噴嚏',   en: 'The dinosaur sneezes',           pic: '🦖🤧', lv: 3 },
-    { ch: '大野狼吹氣球', en: 'The big bad wolf blows balloons', pic: '🐺🎈', lv: 3 },
-    { ch: '恐龍學寫字',   en: 'The dinosaur learns to write',   pic: '🦖✏️', lv: 3 },
-    { ch: '螞蟻搬蛋糕',   en: 'The ants carry a cake',          pic: '🐜🍰', lv: 3 },
-    { ch: '火車鑽山洞',   en: 'The train goes through the tunnel', pic: '🚂⛰️', lv: 3 }
-  ];
-
   function makeSentQuestion(s, bank, level) {
     const others = shuffle(bank.filter(x => x.ch !== s.ch).slice());
     // young readers get mostly picture-matching; older ones read the sentences
@@ -652,6 +408,164 @@ window.Store = (function () {
     return picks.map(s => makeSentQuestion(s, bank, level));
   }
 
+
+  /* ---------- Spot the Twin: three of a kind and one look-alike ----------
+     Trains the eye to catch the small difference between 木 and 本, 日 and
+     目 — exactly the mix-ups new readers make. The odd one out is the
+     answer; the 🔊 chips stay hidden so the sound can't give it away. */
+  function generateTwins(level, n) {
+    const bank = window.ZH.TWINS.filter(t => t.lv <= level);
+    const picks = pickFresh('zh-twins', bank.map(t => Object.assign({ ch: t.a + t.b }, t)), n);
+    return picks.map(t => {
+      const flip = Math.random() < 0.5;            // which of the pair is the odd one
+      const base = flip ? t.b : t.a, odd = flip ? t.a : t.b;
+      const baseEn = flip ? t.be : t.ae, oddEn = flip ? t.ae : t.be;
+      const slots = level >= 3 ? 6 : 4;
+      const opts = new Array(slots).fill(base);
+      const correct = Math.floor(Math.random() * slots);
+      opts[correct] = odd;
+      return {
+        id: uid(), packId: 'zh-twins', type: 'zhodd',
+        emoji: '🔍', zh: odd, en: oddEn,
+        text: 'Tap the one that is different! 找出不一樣的字',
+        say: '哪一個不一樣？',
+        after: { zh: base + '，' + odd, en: baseEn + ' … ' + oddEn },
+        options: opts, correct, time: 30, level
+      };
+    });
+  }
+
+  /* ---------- Opposites: hear a word, tap its opposite ---------- */
+  function generateOpposites(level, n) {
+    const bank = window.ZH.OPPOSITES.filter(o => o.lv <= level);
+    const picks = pickFresh('zh-opposites', bank.map(o => Object.assign({ ch: o.a + o.b }, o)), n);
+    return picks.map(o => {
+      const flip = Math.random() < 0.5;
+      const from = flip ? o.b : o.a, to = flip ? o.a : o.b;
+      const fromP = flip ? o.bp : o.ap, toP = flip ? o.ap : o.bp;
+      const fromE = flip ? o.be : o.ae, toE = flip ? o.ae : o.be;
+      // wrong answers: halves of other pairs (never this pair's own words)
+      const pool = shuffle(bank.filter(x => x !== o).map(x => Math.random() < 0.5 ? x.a : x.b));
+      const others = [];
+      for (const c of pool) { if (others.length >= 3) break; if (c !== from && c !== to && others.indexOf(c) < 0) others.push(c); }
+      const opts = shuffle([to].concat(others));
+      return {
+        id: uid(), packId: 'zh-opposites', type: 'zh',
+        emoji: from, zh: to, en: toE,
+        text: fromP + ' ' + from + '  ↔  ?',
+        say: from + '，相反的是什麼？',
+        after: { zh: from + '、' + to, en: fromE + ' and ' + toE },
+        options: opts, correct: opts.indexOf(to), time: 30, level,
+        picHint: toP
+      };
+    });
+  }
+
+  /* ---------- Count & Say: how many? answer with the right measure word ----------
+     Ties numbers to characters: 三隻貓, 兩條魚. Level 1 counts to 3,
+     level 2 to 5, level 3 to 9. */
+  function generateCount(level, n) {
+    const bank = window.ZH.COUNT.filter(c => c.lv <= level);
+    const picks = pickFresh('zh-count', bank, n);
+    const NUM = window.ZH.NUMBERS, NUM_EN = window.ZH.NUM_EN;
+    const max = level === 1 ? 3 : level === 2 ? 5 : 9;
+    return picks.map(c => {
+      const k = rnd(1, max);
+      const phrase = j => NUM[j] + c.m + c.ch;
+      const nums = new Set([k]);
+      while (nums.size < Math.min(4, max)) nums.add(rnd(1, max));
+      const opts = shuffle(Array.from(nums)).map(phrase);
+      return {
+        id: uid(), packId: 'zh-count', type: 'zh',
+        emoji: c.pic.repeat(k), count: k,
+        zh: phrase(k), en: NUM_EN[k] + ' ' + c.en + (k > 1 ? 's' : ''),
+        text: 'How many? 有幾' + c.m + c.ch + '？',
+        say: '有幾' + c.m + c.ch + '？',
+        options: opts, correct: opts.indexOf(phrase(k)), time: 30, level
+      };
+    });
+  }
+
+  /* ---------- per-character memory: the Garden's soil ----------
+     Every Chinese game reports each character it showed and whether the
+     child got it right. A character grows a stage when it's answered right
+     on or after its due day (spaced repetition: 0, 1, 3, 7, 14 days), so
+     a plant that's watered too early stays the same size — the child has
+     to come back tomorrow. */
+  const CHARS_KEY = 'milesQuiz.chars.v1';
+  const GROW_DAYS = [0, 1, 3, 7, 14];          // wait before each stage can grow
+  const MAX_STAGE = 4;
+  const CJK_RE = /[一-鿿]/;
+  function daysBetween(a, b) {
+    const ms = new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00');
+    return Math.round(ms / 86400000);
+  }
+  function getCharStats() { return readJSON(CHARS_KEY, {})[playerKey()] || {}; }
+  function saveCharStats(st) {
+    const all = readJSON(CHARS_KEY, {});
+    all[playerKey()] = st;
+    writeJSON(CHARS_KEY, all);
+  }
+  // is this character ready to grow (or thirsty, in garden speak)?
+  function charDue(c) {
+    if (!c) return true;
+    if (c.stage >= MAX_STAGE) return false;
+    return daysBetween(c.last, todayStr()) >= GROW_DAYS[c.stage];
+  }
+  // note a meeting with a character (or a word/sentence — each known
+  // character in it gets credit). Returns the characters that grew.
+  function noteChars(text, right) {
+    const st = getCharStats();
+    const grown = [];
+    const seen = new Set();
+    Array.from(String(text || '')).forEach(ch => {
+      if (!CJK_RE.test(ch) || seen.has(ch) || !window.ZH.word(ch)) return;
+      seen.add(ch);
+      const c = st[ch] || { stage: 0, seen: 0, ok: 0, last: todayStr(), planted: todayStr() };
+      c.seen++;
+      if (right) {
+        c.ok++;
+        if (charDue(c) && c.stage < MAX_STAGE) { c.stage++; c.last = todayStr(); grown.push(ch); }
+        else if (c.seen === 1) c.last = todayStr();
+      } else if (c.stage > 1 && c.seen > 2 && c.ok / c.seen < 0.5) {
+        c.stage--;                                   // a wilting plant asks for care
+        c.last = todayStr();
+      }
+      st[ch] = c;
+    });
+    saveCharStats(st);
+    return grown;
+  }
+  function noteChar(ch, right) { return noteChars(ch, right); }
+  // the variety quest counts distinct games played today
+  function noteGamePlayed(packId) {
+    const st = questState();
+    st.games = st.games || [];
+    if (st.games.indexOf(packId) >= 0) { saveQuestState(st); return []; }
+    st.games.push(packId);
+    saveQuestState(st);
+    return bumpQuest('variety', 1);
+  }
+  // characters the garden wants watered today, thirstiest first
+  function dueChars() {
+    const st = getCharStats();
+    return Object.keys(st)
+      .filter(ch => charDue(st[ch]))
+      .sort((a, b) => st[a].stage - st[b].stage || daysBetween(st[b].last, todayStr()) - daysBetween(st[a].last, todayStr()));
+  }
+  // a watering round: questions about thirsty characters first, then the
+  // smallest plants, so the garden as a whole keeps growing
+  function generateGarden(n) {
+    const st = getCharStats();
+    const known = Object.keys(st);
+    if (!known.length) return [];
+    const due = dueChars();
+    const rest = known.filter(ch => due.indexOf(ch) < 0).sort((a, b) => st[a].stage - st[b].stage);
+    const picks = shuffle(due).concat(shuffle(rest)).slice(0, n).map(ch => window.ZH.word(ch)).filter(Boolean);
+    const bank = ZH_WORDS;
+    return picks.map(w => makeZhQuestion(w, bank, w.lv >= 3 ? 3 : 2, 'zh-garden'));
+  }
+
   /* ---------- players ---------- */
   function getPlayers() {
     try { return JSON.parse(localStorage.getItem(PLAYERS_KEY) || '[]') || []; }
@@ -682,7 +596,7 @@ window.Store = (function () {
     savePlayers(getPlayers().filter(n => n !== name));
     const all = allBest();
     if (all[name]) { delete all[name]; saveBest(all); }       // drop their scores too
-    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY, ACT_KEY, QUEST_KEY].forEach(k => {   // and their data
+    [COINS_KEY, STICKERS_KEY, BUDDY_KEY, WRITE_KEY, ACT_KEY, QUEST_KEY, CHARS_KEY].forEach(k => {   // and their data
       const o = readJSON(k, {});
       if (o[name] != null) { delete o[name]; writeJSON(k, o); }
     });
@@ -789,7 +703,8 @@ window.Store = (function () {
   const QUESTS = [
     { id: 'zhround', icon: '🀄', label: 'Play a Chinese game 玩一場中文遊戲', goal: 1, reward: 10 },
     { id: 'write',   icon: '✍️', label: 'Write 3 characters 寫三個字',        goal: 3, reward: 10 },
-    { id: 'correct', icon: '✅', label: 'Get 10 right 答對十題',              goal: 10, reward: 10 }
+    { id: 'correct', icon: '✅', label: 'Get 10 right 答對十題',              goal: 10, reward: 10 },
+    { id: 'variety', icon: '🎲', label: 'Try 3 different games 玩三種遊戲',    goal: 3, reward: 10 }
   ];
   function questState() {
     const all = readJSON(QUEST_KEY, {});
@@ -860,7 +775,9 @@ window.Store = (function () {
     load, save, getPacks, getPack, questionsFor, allQuestions, countFor,
     upsertQuestion, deleteQuestion, addPack, deletePack,
     exportJSON, importJSON, resetDefaults,
-    generateMath, generateZh, generateZhWords, generateZhSentences, shuffle, shuffleOptions,
+    generateMath, generateZh, generateZhWords, generateZhSentences,
+    generateTwins, generateOpposites, generateCount, generateGarden, shuffle, shuffleOptions,
+    getCharStats, noteChar, noteChars, dueChars, charDue, noteGamePlayed, todayStr,
     getBest, setBest, uid,
     getPlayers, getCurrentPlayer, setCurrentPlayer, addPlayer, removePlayer,
     getCoins, addCoins, getStickers, addSticker, getBuddy, setBuddy,

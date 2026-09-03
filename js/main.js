@@ -1,12 +1,9 @@
-/* App glue: screen routing, home grid, pack launching, math-level picker,
-   parent gate. Loaded last. */
+/* App glue: screen routing, home grid, game launching, the shared level
+   picker, parent gate. Loaded last. */
 (function () {
   const ROUND_SIZE = 10;
-  let pendingMathLevel = null;
-  let pendingZhLevel = null;
-  let pendingZhwLevel = null;
-  let pendingZhsLevel = null;
   let gateAnswer = 0;
+  const lastLevel = {};          // remembered per game for "Play again"
 
   const screens = {
     home: 'screen-home',
@@ -15,6 +12,7 @@
     results: 'screen-results',
     prizes: 'screen-prizes',
     write: 'screen-write',
+    mini: 'screen-mini',
     parent: 'screen-parent'
   };
 
@@ -23,6 +21,16 @@
     const id = screens[name] || name;
     document.getElementById(id).classList.add('active');
     window.scrollTo(0, 0);
+  };
+
+  // one line under each game's name on the home screen
+  const SUBS = {
+    'zh-quest': '👂 listen & tap', 'zh-words': '👂 two-character words', 'zh-sentences': '😜 funny sentences',
+    'zh-write': '✍️ trace & learn', 'zh-build': '🧩 snap pieces together', 'zh-whack': '🔨 bop the right one',
+    'zh-twins': '👀 spot the difference', 'zh-match': '🃏 flip & match', 'zh-bingo': '🎱 3 in a row',
+    'zh-order': '🧱 put words in order', 'zh-morph': '🏺 pictures become words', 'zh-flash': '⚡ look, then write',
+    'zh-hunt': '🔍 find the hidden ones', 'zh-count': '🔢 how many?', 'zh-opposites': '↔️ big ↔ small',
+    'zh-garden': '🌱 water your words'
   };
 
   /* ---------- home ---------- */
@@ -60,34 +68,75 @@
       en: document.getElementById('pack-grid-en')
     };
     grids.zh.innerHTML = ''; grids.en.innerHTML = '';
+    const thirsty = Store.dueChars().length;
+    const plants = Object.keys(Store.getCharStats()).length;
     Store.getPacks().forEach(p => {
       const count = Store.countFor(p.id);
       if (!p.generated && count === 0) return; // hide empty custom packs
       const lang = p.lang === 'zh' ? 'zh' : 'en';
       const card = document.createElement('button');
       card.className = 'pack-card ' + (p.color || 'a1') + (lang === 'zh' ? ' zh-card' : '');
-      const sub = p.id === 'zh-write' ? '✍️ trace & learn'
-        : p.generated ? '∞ endless' : count + ' question' + (count === 1 ? '' : 's');
+      let sub = SUBS[p.id] || (p.generated ? '∞ endless' : count + ' question' + (count === 1 ? '' : 's'));
+      if (p.id === 'zh-garden') sub = plants ? `🌱 ${plants} plants` + (thirsty ? ` · 💧 ${thirsty} thirsty` : '') : sub;
       const best = Store.getBest(p.id);
       card.innerHTML = `<span class="p-emoji">${p.emoji}</span>
         <span class="p-name">${escapeHtml(p.name)}</span>
         <span class="p-count">${sub}${best ? ' · 🏅' + best : ''}</span>`;
+      if (p.id === 'zh-garden' && thirsty) card.classList.add('thirsty');
       card.addEventListener('click', () => { Sfx.resume(); Sfx.tap(); launchPack(p.id); });
       grids[lang].appendChild(card);
     });
   }
 
-  /* ---------- launching ---------- */
+  /* ---------- launching ----------
+     Every generated game is described here: how to ask for a level and
+     how to start it. Quiz-engine games build a question list; mini-games
+     open their own module. */
+  const LEVELS = {
+    quest: [['🐣 First Words', '14 easy words 入門字'], ['🦊 More Words', '40 words 更多字'], ['🐉 Word Master', 'all the words 全部的字']],
+    words: [['🐣 First Words', '15 easy words 入門詞'], ['🦊 More Words', '35 words 更多詞'], ['🐉 Word Master', 'all 59 words 全部的詞']],
+    sents: [['🐣 First Sentences', '22 easy ones 入門句'], ['🦊 More Sentences', '53 sentences 更多句'], ['🐉 Sentence Master', 'all 80 句子大師']],
+    math: [['🐣 Easy', 'small numbers'], ['🦊 Medium', '3-digit, no carrying'], ['🐉 Challenge', 'carrying & borrowing']],
+    build: [['🐣 Two Pieces', '日＋月＝明 簡單的字'], ['🦊 More Pieces', 'trickier characters 更多字'], ['🐉 Three Pieces', '木木木＝森 三塊拼一起']],
+    whack: [['🐣 Slow Moles', 'easy words, slow 慢慢來'], ['🦊 Quick Moles', 'more words, faster 快一點'], ['🐉 Speedy Moles', 'all words, fast! 超快']],
+    twins: [['🐣 Easy Twins', '4 tiles, big differences 明顯的'], ['🦊 Tricky Twins', '4 tiles, look closely 仔細看'], ['🐉 Eagle Eyes', '6 tiles, tiny differences 超像的']],
+    match: [['🐣 6 Pairs', 'characters & pictures 字配圖'], ['🦊 8 Pairs', 'more characters 更多字'], ['🐉 10 Pairs', 'two-character words 詞語配圖']],
+    bingo: [['🐣 3 × 3', 'hear it, see a picture 有圖提示'], ['🦊 4 × 4', 'bigger board 更大的板'], ['🐉 4 × 4 by ear', 'no picture hints 只用耳朵聽']],
+    order: [['🐣 3 Blocks', 'short sentences 短短的句子'], ['🦊 3–4 Blocks', 'longer ones 長一點'], ['🐉 4–5 Blocks', 'the silliest sentences 最長的']],
+    flash: [['🐣 Simple Shapes', '1–3 strokes 筆畫少'], ['🦊 Medium Shapes', '4–6 strokes 中等'], ['🐉 Tricky Shapes', '7+ strokes 筆畫多']],
+    hunt: [['🐣 Small Crowd', '20 characters 少少的'], ['🦊 Big Crowd', '30 characters 多一點'], ['🐉 Twins Hiding', 'look-alikes mixed in 混進雙胞胎']],
+    count: [['🐣 Up to 3', '一、兩、三 數到三'], ['🦊 Up to 5', 'more things 數到五'], ['🐉 Up to 9', 'lots of things 數到九']],
+    opposites: [['🐣 First Pairs', '大小 上下 冷熱 入門'], ['🦊 More Pairs', '左右 快慢 男女 更多'], ['🐉 All Pairs', 'every opposite 全部的']]
+  };
+  const quiz = gen => level => { Game.stop(); Game.start(gen.id, gen.make(level, ROUND_SIZE)); };
+  const GAMES = {
+    'math-machine': { levels: LEVELS.math, desc: 'How tricky do you want it?', start: level => { Game.stop(); Game.start('math-machine', Store.generateMath(level, ROUND_SIZE)); } },
+    'zh-quest':     { levels: LEVELS.quest, desc: 'Listen, look, and tap — no reading needed!', start: quiz({ id: 'zh-quest', make: Store.generateZh }) },
+    'zh-words':     { levels: LEVELS.words, desc: 'Listen, look, and tap — no reading needed!', start: quiz({ id: 'zh-words', make: Store.generateZhWords }) },
+    'zh-sentences': { levels: LEVELS.sents, desc: 'Funny little sentences — listen, giggle, and tap!', start: quiz({ id: 'zh-sentences', make: Store.generateZhSentences }) },
+    'zh-twins':     { levels: LEVELS.twins, desc: 'Three are the same, one is different. Find it!', start: quiz({ id: 'zh-twins', make: Store.generateTwins }) },
+    'zh-count':     { levels: LEVELS.count, desc: 'Count the things and pick the right words!', start: quiz({ id: 'zh-count', make: Store.generateCount }) },
+    'zh-opposites': { levels: LEVELS.opposites, desc: 'Hear a word, tap its opposite!', start: quiz({ id: 'zh-opposites', make: Store.generateOpposites }) },
+    'zh-build':     { levels: LEVELS.build, desc: 'Snap pieces together to build a character!', start: level => Builder.open(level) },
+    'zh-whack':     { levels: LEVELS.whack, desc: 'Hear a word, bop the mole holding it!', start: level => Whack.open(level) },
+    'zh-match':     { levels: LEVELS.match, desc: 'Flip cards to match characters with pictures!', start: level => Match.open(level) },
+    'zh-bingo':     { levels: LEVELS.bingo, desc: 'Hear a word, stamp it. Three in a row wins!', start: level => Bingo.open(level) },
+    'zh-order':     { levels: LEVELS.order, desc: 'Put the word blocks in order to build the sentence!', start: level => Order.open(level) },
+    'zh-flash':     { levels: LEVELS.flash, desc: 'Look carefully, then write it from memory!', start: level => Flash.open(level) },
+    'zh-hunt':      { levels: LEVELS.hunt, desc: 'Characters are hiding in the crowd. Find them all!', start: level => Hunt.open(level) },
+    'zh-morph':     { start: () => Morph.open() },
+    'zh-write':     { start: () => Writer.open() },
+    'zh-garden':    { start: () => Garden.open() }
+  };
+
   function launchPack(packId) {
     const pack = Store.getPack(packId);
     if (!pack) return;
     if (pack.generated) {
-      // generated packs ask for a level first
-      if (packId === 'zh-quest') openZhModal();
-      else if (packId === 'zh-words') openZhwModal();
-      else if (packId === 'zh-sentences') openZhsModal();
-      else if (packId === 'zh-write') { Writer.open(); return; }
-      else openMathModal();
+      const g = GAMES[packId];
+      if (!g) return;
+      if (g.levels) openLevels(pack, g);
+      else g.start();
       return;
     }
     let qs = Store.questionsFor(packId).slice();
@@ -97,84 +146,39 @@
     Game.start(packId, qs);
   }
 
-  function startMath(level) {
-    const qs = Store.generateMath(level, ROUND_SIZE);
-    Game.stop();
-    Game.start('math-machine', qs);
-  }
-
-  function startZhQuest(level) {
-    const qs = Store.generateZh(level, ROUND_SIZE);
-    Game.stop();
-    Game.start('zh-quest', qs);
-  }
-
-  function startZhWords(level) {
-    const qs = Store.generateZhWords(level, ROUND_SIZE);
-    Game.stop();
-    Game.start('zh-words', qs);
-  }
-
-  function startZhSentences(level) {
-    const qs = Store.generateZhSentences(level, ROUND_SIZE);
-    Game.stop();
-    Game.start('zh-sentences', qs);
-  }
-
+  // the "Play again" button: same game, same level
   function replay() {
-    const pid = Game.currentPack();
+    const custom = Results.replay();
+    if (custom) { custom(); return; }
+    const pid = Results.currentPack();
     const pack = Store.getPack(pid);
-    if (pack && pack.generated) {
-      if (pid === 'zh-quest') startZhQuest(pendingZhLevel || 1);
-      else if (pid === 'zh-words') startZhWords(pendingZhwLevel || 1);
-      else if (pid === 'zh-sentences') startZhSentences(pendingZhsLevel || 1);
-      else startMath(pendingMathLevel || 2);
-    }
-    else { launchPack(pid); }
+    const g = GAMES[pid];
+    if (pack && pack.generated && g) g.start(lastLevel[pid] || 1);
+    else launchPack(pid);
   }
 
-  /* ---------- level modals (math machine / Chinese quests) ---------- */
-  function openMathModal() { document.getElementById('math-modal').classList.remove('hidden'); }
-  function openZhModal() { document.getElementById('zh-modal').classList.remove('hidden'); }
-  function openZhwModal() { document.getElementById('zhw-modal').classList.remove('hidden'); }
-  function openZhsModal() { document.getElementById('zhs-modal').classList.remove('hidden'); }
+  /* ---------- level picker (one modal, every game) ---------- */
+  function openLevels(pack, g) {
+    document.getElementById('level-title').textContent = pack.emoji + ' ' + pack.name;
+    document.getElementById('level-desc').textContent = g.desc || 'Pick a level';
+    const box = document.getElementById('level-buttons');
+    box.innerHTML = '';
+    g.levels.forEach((lv, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'level-btn';
+      btn.dataset.level = i + 1;
+      btn.innerHTML = escapeHtml(lv[0]) + '<br><small>' + escapeHtml(lv[1]) + '</small>';
+      btn.addEventListener('click', () => {
+        Sfx.tap();
+        lastLevel[pack.id] = i + 1;
+        closeModal('level-modal');
+        g.start(i + 1);
+      });
+      box.appendChild(btn);
+    });
+    document.getElementById('level-modal').classList.remove('hidden');
+  }
   function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-  document.querySelectorAll('#math-modal .level-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      Sfx.tap();
-      pendingMathLevel = parseInt(btn.dataset.level, 10);
-      closeModal('math-modal');
-      startMath(pendingMathLevel);
-    });
-  });
-
-  document.querySelectorAll('#zh-modal .level-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      Sfx.tap();
-      pendingZhLevel = parseInt(btn.dataset.level, 10);
-      closeModal('zh-modal');
-      startZhQuest(pendingZhLevel);
-    });
-  });
-
-  document.querySelectorAll('#zhw-modal .level-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      Sfx.tap();
-      pendingZhwLevel = parseInt(btn.dataset.level, 10);
-      closeModal('zhw-modal');
-      startZhWords(pendingZhwLevel);
-    });
-  });
-
-  document.querySelectorAll('#zhs-modal .level-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      Sfx.tap();
-      pendingZhsLevel = parseInt(btn.dataset.level, 10);
-      closeModal('zhs-modal');
-      startZhSentences(pendingZhsLevel);
-    });
-  });
 
   document.querySelectorAll('[data-close]').forEach(b => {
     b.addEventListener('click', () => closeModal(b.dataset.close));
@@ -207,8 +211,8 @@
       const acts = Store.getActivityFor(name, 7);
       const rounds = acts.filter(a => a.kind === 'round');
       const writes = acts.filter(a => a.kind === 'write');
-      const zhIds = { chinese: 1, 'zh-quest': 1, 'zh-words': 1, 'zh-sentences': 1 };
-      const zhRounds = rounds.filter(r => zhIds[r.packId]);
+      const zhRounds = rounds.filter(r => { const p = Store.getPack(r.packId); return p && p.lang === 'zh'; });
+      const grown = Object.keys(Store.getCharStats()).length;
       const ok = rounds.reduce((s, r) => s + (r.ok || 0), 0);
       const total = rounds.reduce((s, r) => s + (r.total || 0), 0);
       const days = new Set(acts.map(a => a.d)).size;
@@ -226,6 +230,7 @@
             <li>🎮 完成 ${rounds.length} 回合（中文 ${zhRounds.length} 回合）</li>
             <li>✅ 答對率 ${total ? Math.round(ok / total * 100) + '%（' + ok + ' / ' + total + ' 題）' : '—'}</li>
             <li>✍️ 寫了 ${writes.length} 次字${charList ? '：<span class="report-chars">' + charList + '</span>' : ''}</li>
+            <li>🌱 花園裡有 ${grown} 個字</li>
           </ul>`;
       body.appendChild(div);
     });
@@ -250,19 +255,19 @@
   });
 
   // 🏠 exit-to-home buttons shown during the countdown and quiz
-  function goHome() { Sfx.tap(); Game.stop(); renderHome(); showScreen('home'); }
+  function goHome() { Sfx.tap(); Game.stop(); Mini.stop(); renderHome(); showScreen('home'); }
   document.querySelectorAll('.exit-home').forEach(b => b.addEventListener('click', goHome));
 
   /* ---------- results buttons ---------- */
   document.getElementById('play-again').addEventListener('click', () => { Sfx.tap(); replay(); });
   document.getElementById('back-home').addEventListener('click', () => {
-    Sfx.tap(); Game.stop(); renderHome(); showScreen('home');
+    Sfx.tap(); Game.stop(); Mini.stop(); renderHome(); showScreen('home');
   });
 
   /* ---------- prize machine ---------- */
   function openPrizes() {
     Sfx.resume(); Sfx.tap();
-    Game.stop();
+    Game.stop(); Mini.stop();
     Prizes.refresh();
     showScreen('prizes');
   }

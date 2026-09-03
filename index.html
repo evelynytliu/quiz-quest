@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=20260902b" />
+  <link rel="stylesheet" href="css/styles.css?v=20260903" />
 </head>
 <body>
   <canvas id="confetti-canvas"></canvas>
@@ -199,59 +199,25 @@
     </div>
   </section>
 
-  <!-- ============ MATH LEVEL PICKER (modal) ============ -->
-  <div id="math-modal" class="modal hidden">
-    <div class="modal-card">
-      <button class="modal-close" data-close="math-modal">✕</button>
-      <h2>🤖 Math Machine</h2>
-      <p>How tricky do you want it?</p>
-      <div class="level-buttons">
-        <button class="level-btn" data-level="1">🐣 Easy<br><small>small numbers</small></button>
-        <button class="level-btn" data-level="2">🦊 Medium<br><small>3-digit, no carrying</small></button>
-        <button class="level-btn" data-level="3">🐉 Challenge<br><small>carrying &amp; borrowing</small></button>
-      </div>
+  <!-- ============ MINI-GAMES (Builder, Whack-a-Char, Bingo, …) ============ -->
+  <section id="screen-mini" class="screen">
+    <div class="mini-wrap">
+      <header class="write-top">
+        <button class="exit-home" type="button" title="Back to home" aria-label="Home">🏠</button>
+        <h1 id="mini-title" class="write-title">Game</h1>
+        <div class="pill coin-pill">💰 <span id="mini-coins">0</span></div>
+      </header>
+      <div id="mini-stage" class="mini-stage"></div>
     </div>
-  </div>
+  </section>
 
-  <!-- ============ CHARACTER QUEST LEVEL PICKER (modal) ============ -->
-  <div id="zh-modal" class="modal hidden">
+  <!-- ============ LEVEL PICKER (modal, shared by every game) ============ -->
+  <div id="level-modal" class="modal hidden">
     <div class="modal-card">
-      <button class="modal-close" data-close="zh-modal">✕</button>
-      <h2>🐉 Character Quest 認字</h2>
-      <p>Listen, look, and tap — no reading needed!</p>
-      <div class="level-buttons">
-        <button class="level-btn" data-level="1">🐣 First Words<br><small>14 easy words 入門字</small></button>
-        <button class="level-btn" data-level="2">🦊 More Words<br><small>39 words 更多字</small></button>
-        <button class="level-btn" data-level="3">🐉 Word Master<br><small>all 76 words 全部的字</small></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ WORD QUEST LEVEL PICKER (modal) ============ -->
-  <div id="zhw-modal" class="modal hidden">
-    <div class="modal-card">
-      <button class="modal-close" data-close="zhw-modal">✕</button>
-      <h2>🐼 Word Quest 詞語</h2>
-      <p>Listen, look, and tap — no reading needed!</p>
-      <div class="level-buttons">
-        <button class="level-btn" data-level="1">🐣 First Words<br><small>15 easy words 入門詞</small></button>
-        <button class="level-btn" data-level="2">🦊 More Words<br><small>35 words 更多詞</small></button>
-        <button class="level-btn" data-level="3">🐉 Word Master<br><small>all 59 words 全部的詞</small></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ SILLY SENTENCES LEVEL PICKER (modal) ============ -->
-  <div id="zhs-modal" class="modal hidden">
-    <div class="modal-card">
-      <button class="modal-close" data-close="zhs-modal">✕</button>
-      <h2>😜 Silly Sentences 短句</h2>
-      <p>Funny little sentences — listen, giggle, and tap!</p>
-      <div class="level-buttons">
-        <button class="level-btn" data-level="1">🐣 First Sentences<br><small>22 easy ones 入門句</small></button>
-        <button class="level-btn" data-level="2">🦊 More Sentences<br><small>53 sentences 更多句</small></button>
-        <button class="level-btn" data-level="3">🐉 Sentence Master<br><small>all 80 句子大師</small></button>
-      </div>
+      <button class="modal-close" data-close="level-modal">✕</button>
+      <h2 id="level-title">🐉 Character Quest</h2>
+      <p id="level-desc">Pick a level</p>
+      <div id="level-buttons" class="level-buttons"></div>
     </div>
   </div>
 
@@ -369,17 +335,29 @@
     </div>
   </section>
 
-  <script src="js/vendor/hanzi-writer.min.js?v=20260902b"></script>
-  <script src="js/zh-strokes.js?v=20260902b"></script>
-  <script src="js/seed.js?v=20260902b"></script>
-  <script src="js/store.js?v=20260902b"></script>
-  <script src="js/audio.js?v=20260902b"></script>
-  <script src="js/voice.js?v=20260902b"></script>
-  <script src="js/confetti.js?v=20260902b"></script>
-  <script src="js/game.js?v=20260902b"></script>
-  <script src="js/write.js?v=20260902b"></script>
-  <script src="js/prizes.js?v=20260902b"></script>
-  <script src="js/editor.js?v=20260902b"></script>
-  <script src="js/main.js?v=20260902b"></script>
+  <script src="js/vendor/hanzi-writer.min.js?v=20260903"></script>
+  <script src="js/zh-strokes.js?v=20260903"></script>
+  <script src="js/zh-data.js?v=20260903"></script>
+  <script src="js/seed.js?v=20260903"></script>
+  <script src="js/store.js?v=20260903"></script>
+  <script src="js/audio.js?v=20260903"></script>
+  <script src="js/voice.js?v=20260903"></script>
+  <script src="js/confetti.js?v=20260903"></script>
+  <script src="js/results.js?v=20260903"></script>
+  <script src="js/game.js?v=20260903"></script>
+  <script src="js/write.js?v=20260903"></script>
+  <script src="js/mini.js?v=20260903"></script>
+  <script src="js/build.js?v=20260903"></script>
+  <script src="js/whack.js?v=20260903"></script>
+  <script src="js/match.js?v=20260903"></script>
+  <script src="js/bingo.js?v=20260903"></script>
+  <script src="js/order.js?v=20260903"></script>
+  <script src="js/morph.js?v=20260903"></script>
+  <script src="js/flash.js?v=20260903"></script>
+  <script src="js/hunt.js?v=20260903"></script>
+  <script src="js/garden.js?v=20260903"></script>
+  <script src="js/prizes.js?v=20260903"></script>
+  <script src="js/editor.js?v=20260903"></script>
+  <script src="js/main.js?v=20260903"></script>
 </body>
 </html>

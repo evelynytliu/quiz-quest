@@ -192,29 +192,6 @@ window.Sfx = (function () {
     }
   }
 
-  // For Chinese "meaning" questions: say the character in Mandarin first (so the
-  // child hears its real sound), then read the English question + options.
-  function speakChineseMeaning(zhChar, question, options, onOption) {
-    if (!('speechSynthesis' in window) || muted) return;
-    speechSynthesis.cancel();
-    if (zhChar && zhAvailable()) {
-      speechSynthesis.speak(utterZh(zhChar, 0.7));
-      speechSynthesis.speak(utterZh(zhChar, 0.7));   // twice, nice and clear
-    }
-    speechSynthesis.speak(utter(question, 0.82));
-    if (options && options.length) {
-      speechSynthesis.speak(utter('Is it ...', 0.85));
-      options.forEach((o, i) => {
-        const u = utter(String(o), 0.85);
-        if (typeof onOption === 'function') {
-          u.onstart = () => onOption(i, true);
-          u.onend = () => onOption(i, false);
-        }
-        speechSynthesis.speak(u);
-      });
-    }
-  }
-
   function stopSpeak() { if ('speechSynthesis' in window) speechSynthesis.cancel(); }
 
   function resume() { const c = ac(); if (c && c.state === 'suspended') c.resume(); }
@@ -224,6 +201,6 @@ window.Sfx = (function () {
   function zhVoiceInfo() { return zhVoice ? zhVoice.name + ' [' + zhVoice.lang + ']' : ''; }
 
   return { correct, wrong, tick, beep, go, fanfare, tap, coin, pop, speak, speakList,
-    speakZh, speakZhEn, speakChineseMeaning, zhAvailable, zhVoiceInfo, zhPace,
+    speakZh, speakZhEn, zhAvailable, zhVoiceInfo, zhPace,
     stopSpeak, resume, setMuted };
 })();

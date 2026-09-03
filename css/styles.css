@@ -469,6 +469,9 @@ body{
 .write-island.island-1{background:linear-gradient(160deg,rgba(58,168,106,.12),rgba(243,198,76,.14))}
 .write-island.island-2{background:linear-gradient(160deg,rgba(243,160,187,.16),rgba(240,165,147,.14))}
 .write-island.island-3{background:linear-gradient(160deg,rgba(230,176,63,.18),rgba(236,95,73,.10))}
+.write-island.island-4{background:linear-gradient(160deg,rgba(116,197,192,.16),rgba(58,168,106,.12))}
+.write-island.island-5{background:linear-gradient(160deg,rgba(138,127,218,.16),rgba(79,136,214,.12))}
+.write-island.island-6{background:linear-gradient(160deg,rgba(243,198,76,.18),rgba(243,160,187,.14))}
 .island-head{display:flex;align-items:center;gap:8px;margin:2px 4px 12px;font-weight:900;color:var(--ink)}
 .island-emoji{font-size:1.5rem}
 .island-name{flex:1;font-size:1.02rem}
@@ -757,4 +760,315 @@ body{
 @media(max-width:760px){
   .parent-body{grid-template-columns:1fr}
   .answer-grid{margin-top:16px}
+}
+
+/* ================= MINI-GAMES (shared) ================= */
+.mini-wrap{max-width:760px;margin:0 auto;text-align:center;padding-top:6px}
+.mini-stage{margin-top:6px}
+.mini-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 10px}
+.mini-progress{
+  background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow-sm);
+  font-weight:800;padding:8px 16px;border-radius:999px;font-size:1rem;white-space:nowrap;
+}
+.mini-msg{min-height:1.5em;font-weight:800;color:var(--ink-soft);margin:10px 0 4px;font-size:1.02rem}
+.mini-next{margin:14px auto 0;display:block;animation:pop .45s ease}
+.shake{animation:shake .4s ease}
+.zh-font{font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',var(--font-body)}
+/* the garden card wiggles on the home screen when plants are thirsty */
+.pack-card.thirsty{animation:wiggle 3s ease-in-out infinite}
+/* Count & Say: a row of little things on the big tile */
+.q-emoji.count-tile{font-size:clamp(2rem,7vw,3rem);letter-spacing:.1em;line-height:1.25;max-width:520px;margin:0 auto 8px}
+/* Spot the Twin: identical tiles, no chips */
+.odd-grid .odd-opt{min-height:120px}
+.odd-grid-6{grid-template-columns:1fr 1fr 1fr}
+.odd-grid-6 .odd-opt{min-height:100px;padding:12px}
+.odd-grid-6 .zh-opt-char{font-size:clamp(2.4rem,9vw,3.6rem)}
+
+/* ----- Character Builder 拼字 ----- */
+.build-card{
+  background:var(--card);border-radius:26px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
+  padding:16px 14px 14px;position:relative;
+}
+.build-goal{display:flex;align-items:center;justify-content:center;gap:16px}
+.build-pic{font-size:3rem;line-height:1}
+.build-ghost{
+  font-size:4.2rem;line-height:1;font-weight:700;color:rgba(67,64,58,.16);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',var(--font-body);
+}
+.build-say{margin-top:0;padding:8px 14px}
+.build-word{font-weight:800;color:var(--ink-soft);margin:6px 0 10px;font-size:1.05rem}
+.build-slots{
+  display:grid;gap:10px;justify-content:center;align-items:center;margin:8px auto;
+  transition:transform .5s ease, opacity .5s ease;
+}
+.build-slots.layout-lr{grid-template-columns:repeat(2,minmax(84px,110px))}
+.build-slots.layout-tb{grid-template-columns:minmax(84px,110px)}
+.build-slots.layout-tri{grid-template-columns:repeat(2,minmax(72px,92px))}
+.build-slots.layout-tri .build-slot:first-child{grid-column:1 / span 2;justify-self:center;width:72px;height:72px}
+.build-slots.layout-wrap{grid-template-columns:minmax(110px,140px);position:relative}
+.build-slots.layout-wrap .build-slot.inner{
+  position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:54px;height:54px;font-size:2rem;
+  background:#fff;z-index:2;
+}
+.build-slots.layout-wrap .build-slot:first-child{height:130px;font-size:4.2rem}
+.build-slot{
+  aspect-ratio:1;width:100%;border:3px dashed rgba(236,95,73,.45);border-radius:20px;background:#fffaf2;
+  font-size:3.2rem;font-weight:700;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',var(--font-body);
+  transition:transform .15s, background .15s, border-color .15s;
+}
+.build-slot.filled{border-style:solid;border-color:var(--c-blue);background:#eef4fd;animation:pop .3s ease}
+.build-slots.swap .build-slot{animation:swapJump .6s ease}
+@keyframes swapJump{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px) rotate(8deg)}}
+.build-slots.merging{transform:scale(.3);opacity:0}
+.build-result{
+  font-size:clamp(5rem,26vw,8rem);line-height:1;font-weight:700;color:var(--paper);margin:6px auto;
+  width:clamp(130px,42vw,190px);height:clamp(130px,42vw,190px);display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--c-red),#c83a26);border-radius:26px;box-shadow:0 0 0 8px rgba(243,198,76,.35), var(--shadow);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',var(--font-body);
+}
+.build-result.pop{animation:pop .6s cubic-bezier(.3,1.6,.5,1)}
+.build-parts{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px}
+.build-tile{
+  width:clamp(70px,18vw,92px);height:clamp(70px,18vw,92px);border:none;border-radius:20px;cursor:pointer;
+  font-size:clamp(2.2rem,8vw,3rem);font-weight:700;color:var(--paper);box-shadow:var(--shadow-sm);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Microsoft YaHei',var(--font-body);
+  transition:transform .12s, opacity .2s, filter .15s;position:relative;
+}
+.build-tile:hover{transform:translateY(-3px)}
+.build-tile:active{transform:translateY(1px)}
+.build-tile.a0{background:var(--c-red)}.build-tile.a1{background:var(--c-blue)}.build-tile.a2{background:var(--c-yellow);color:var(--ink)}
+.build-tile.a3{background:var(--c-green)}.build-tile.a4{background:var(--c-teal);color:var(--ink)}.build-tile.a5{background:var(--c-pink);color:var(--ink)}
+.build-tile.a6{background:var(--c-salmon);color:var(--ink)}
+.build-tile.used{opacity:.25;transform:scale(.85);pointer-events:none}
+.build-tile.hint{outline:4px solid var(--gold);outline-offset:3px;animation:hintGlow 1s ease-in-out infinite}
+@keyframes hintGlow{0%,100%{box-shadow:0 0 0 0 rgba(243,198,76,.6)}50%{box-shadow:0 0 0 12px rgba(243,198,76,0)}}
+
+/* ----- Whack-a-Char 打地鼠 ----- */
+.whack-target{
+  display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;
+  background:var(--card);border-radius:20px;box-shadow:var(--shadow-sm);padding:10px 16px;margin-bottom:10px;
+}
+.whack-find{font-weight:900;color:var(--ink-soft);font-size:1.05rem}
+.whack-pic{font-size:2.6rem;line-height:1}
+.whack-char{
+  font-size:2.4rem;font-weight:700;color:var(--paper);line-height:1;min-width:58px;height:58px;padding:0 10px;
+  display:flex;align-items:center;justify-content:center;background:linear-gradient(150deg,var(--c-red),#c83a26);
+  border-radius:16px;font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+}
+.whack-char:empty{display:none}
+.whack-say{margin-top:0}
+.whack-field{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:520px;margin:0 auto;
+  background:linear-gradient(180deg,#bfe3a5,#8fcf74);border-radius:26px;padding:16px;box-shadow:var(--shadow);
+}
+.hole{position:relative;aspect-ratio:1;overflow:hidden;border-radius:18px}
+.dirt{
+  position:absolute;left:8%;right:8%;bottom:6%;height:30%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 40%,#6b4a2e,#4a3120 70%);box-shadow:inset 0 6px 10px rgba(0,0,0,.35);
+}
+.mole{
+  position:absolute;left:14%;right:14%;bottom:8%;height:88%;border:none;background:none;cursor:pointer;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;
+  transform:translateY(112%);transition:transform .22s cubic-bezier(.3,1.3,.5,1);
+}
+.mole.up{transform:translateY(0)}
+.mole.bonk{transform:translateY(0) scale(.85) rotate(-8deg);filter:brightness(1.1)}
+.mole.wrong .mole-face{animation:shake .35s ease}
+.mole-face{font-size:clamp(2rem,8vw,3rem);line-height:1}
+.mole-char{
+  background:#fffdf8;border-radius:12px;padding:2px 10px;font-size:clamp(1.6rem,6.5vw,2.4rem);font-weight:700;color:var(--ink);
+  box-shadow:var(--shadow-sm);font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+}
+@media (prefers-reduced-motion: reduce){.mole{transition:none}}
+
+/* ----- Memory Match 翻牌配對 ----- */
+.match-grid{display:grid;gap:10px;max-width:560px;margin:0 auto}
+.match-grid.cols-4{grid-template-columns:repeat(4,1fr)}
+.match-grid.cols-5{grid-template-columns:repeat(5,1fr)}
+.mcard{
+  position:relative;aspect-ratio:3/4;border:none;background:none;cursor:pointer;padding:0;perspective:600px;
+}
+.mcard-face{
+  position:absolute;inset:0;border-radius:16px;display:flex;align-items:center;justify-content:center;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:var(--shadow-sm);
+  transition:transform .45s cubic-bezier(.4,.2,.2,1);
+}
+.mcard-front{background:linear-gradient(150deg,var(--c-blue),#3a6cb4);color:rgba(255,255,255,.7);font-size:1.6rem}
+.mcard-back{
+  background:#fffdf8;border:3px solid var(--line);transform:rotateY(180deg);
+  font-size:clamp(1.6rem,6.5vw,2.6rem);font-weight:700;color:var(--ink);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+}
+.mcard.is-word .mcard-back{font-size:clamp(1.1rem,4.5vw,1.7rem)}
+.mcard.flipped .mcard-front{transform:rotateY(180deg)}
+.mcard.flipped .mcard-back{transform:rotateY(0)}
+.mcard.matched .mcard-back{border-color:var(--gold);background:#fff8e1;animation:rightPulse .5s ease}
+.mcard.matched{pointer-events:none}
+
+/* ----- Bingo 賓果 ----- */
+.bingo-call{
+  display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;
+  background:var(--card);border-radius:20px;box-shadow:var(--shadow-sm);padding:10px 16px;margin-bottom:10px;
+}
+.bingo-call-pic{font-size:2.8rem;line-height:1}
+.bingo-call-pic.pop{animation:pop .5s ease}
+.bingo-call-txt{font-weight:800;color:var(--ink-soft);font-size:1.05rem}
+.bingo-say{margin-top:0}
+.bingo-board{display:grid;gap:10px;max-width:440px;margin:0 auto}
+.bingo-board.size-3{grid-template-columns:repeat(3,1fr)}
+.bingo-board.size-4{grid-template-columns:repeat(4,1fr)}
+.bingo-cell{
+  position:relative;aspect-ratio:1;border:3px solid var(--line);border-radius:18px;background:#fffdf8;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);transition:transform .12s;
+}
+.bingo-cell:hover{transform:translateY(-2px)}
+.bingo-ch{
+  font-size:clamp(2rem,8vw,3.2rem);font-weight:700;color:var(--ink);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+}
+.size-4 .bingo-ch{font-size:clamp(1.7rem,7vw,2.7rem)}
+.bingo-stamp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.4rem;opacity:0;transform:scale(2);transition:opacity .25s, transform .3s cubic-bezier(.3,1.6,.5,1)}
+.bingo-cell.stamped{background:#e9f7ee;border-color:var(--c-green)}
+.bingo-cell.stamped .bingo-ch{opacity:.35}
+.bingo-cell.stamped .bingo-stamp{opacity:1;transform:scale(1) rotate(-8deg)}
+.bingo-banner{
+  position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:60;
+  font-family:var(--font-head);font-weight:700;font-size:clamp(3rem,14vw,6rem);color:var(--c-red);
+  text-shadow:0 8px 24px rgba(232,71,47,.3);pointer-events:none;letter-spacing:4px;
+}
+.bingo-banner.pop{animation:pop .7s cubic-bezier(.3,1.6,.5,1)}
+
+/* ----- Sentence Builder 造句 ----- */
+.order-card{
+  background:var(--card);border-radius:26px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);padding:16px 14px 12px;
+}
+.order-scene{font-size:clamp(3rem,12vw,4.4rem);line-height:1.1;letter-spacing:.1em}
+.order-en{font-weight:800;color:var(--ink-soft);margin:6px 0}
+.order-say{margin-top:4px}
+.order-slots{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0 6px;min-height:70px}
+.order-slot{
+  min-height:64px;padding:8px 12px;border:3px dashed rgba(79,136,214,.5);border-radius:16px;background:#f5f8fe;cursor:pointer;
+  font-size:clamp(1.5rem,6vw,2.2rem);font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center;
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);transition:transform .18s, background .18s;
+}
+.order-slot.filled{border-style:solid;border-color:var(--c-blue);background:#fffdf8;animation:pop .3s ease}
+.order-slot.lit{transform:scale(1.18);background:#fff3c4;border-color:var(--gold)}
+.order-blocks{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px}
+.order-block{
+  border:none;border-radius:16px;cursor:pointer;padding:12px 18px;min-height:64px;
+  font-size:clamp(1.5rem,6vw,2.2rem);font-weight:700;color:var(--paper);box-shadow:var(--shadow-sm);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+  transition:transform .12s, opacity .2s;
+}
+.order-block:hover{transform:translateY(-3px)}
+.order-block.a0{background:var(--c-red)}.order-block.a1{background:var(--c-blue)}.order-block.a2{background:var(--c-yellow);color:var(--ink)}
+.order-block.a3{background:var(--c-green)}.order-block.a4{background:var(--c-teal);color:var(--ink)}.order-block.a5{background:var(--c-pink);color:var(--ink)}
+.order-block.a6{background:var(--c-salmon);color:var(--ink)}
+.order-block.used{opacity:.25;transform:scale(.85);pointer-events:none}
+.order-block.hint{outline:4px solid var(--gold);outline-offset:3px;animation:hintGlow 1s ease-in-out infinite}
+
+/* ----- Ancient Pictures 象形變身 ----- */
+.morph-card{
+  background:var(--card);border-radius:26px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);padding:16px 14px 12px;
+}
+.morph-stage{
+  position:relative;width:clamp(150px,46vw,220px);height:clamp(150px,46vw,220px);margin:0 auto;
+  border-radius:26px;background:linear-gradient(160deg,#f7e9cf,#e9d4b0);box-shadow:inset 0 2px 12px rgba(90,60,30,.15), var(--shadow-sm);
+}
+.morph-layer{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(.6);transition:opacity .55s ease, transform .55s cubic-bezier(.3,1.4,.5,1);
+}
+.morph-emoji{font-size:clamp(5rem,26vw,7.5rem);line-height:1}
+.morph-ancient{color:#5a3d2b;padding:14%}
+.morph-svg{width:100%;height:100%}
+.morph-modern{
+  font-size:clamp(5.5rem,28vw,8rem);font-weight:700;color:#c83a26;line-height:1;
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+}
+.morph-stage.show-emoji .morph-emoji,.morph-stage.show-ancient .morph-ancient,.morph-stage.show-modern .morph-modern{opacity:1;transform:scale(1)}
+.morph-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.morph-opt{min-height:96px;justify-content:center}
+@media(max-width:420px){.morph-opts{grid-template-columns:1fr 1fr}}
+
+/* ----- Flash Write 閃字記憶 ----- */
+.flash-pic{font-size:2.2rem;line-height:1}
+.flash-look{position:relative;margin:8px auto;width:min(72vw,340px)}
+.flash-big{
+  display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;border-radius:22px;
+  background:#fffdf8;border:2px dashed rgba(236,95,73,.4);font-size:clamp(7rem,40vw,13rem);font-weight:700;color:var(--ink);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);line-height:1;
+}
+.flash-ring{height:10px;border-radius:999px;background:var(--card-soft);margin-top:8px;overflow:hidden}
+.flash-ring-fill{height:100%;width:100%;background:linear-gradient(90deg,var(--c-green),var(--c-yellow));border-radius:999px}
+
+/* ----- Hide & Seek 找字 ----- */
+.hunt-target{
+  display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;
+  background:var(--card);border-radius:20px;box-shadow:var(--shadow-sm);padding:10px 16px;margin-bottom:10px;
+}
+.hunt-find{font-weight:900;color:var(--ink-soft)}
+.hunt-count{font-weight:900;color:var(--c-blue);font-size:1.3rem}
+.hunt-char{
+  font-size:2.4rem;font-weight:700;color:var(--paper);line-height:1;min-width:58px;height:58px;padding:0 10px;
+  display:flex;align-items:center;justify-content:center;background:linear-gradient(150deg,var(--c-red),#c83a26);
+  border-radius:16px;font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+}
+.hunt-pic{font-size:2.2rem;line-height:1}
+.hunt-say{margin-top:0;padding:8px 14px}
+.hunt-board{
+  display:grid;grid-template-columns:repeat(var(--cols,5),1fr);gap:6px;max-width:600px;margin:0 auto;
+  background:linear-gradient(160deg,#dff1f7,#cfe9d8);border-radius:26px;padding:18px 14px;box-shadow:var(--shadow);
+  font-size:clamp(1.5rem,5.5vw,2.3rem);
+}
+.hunt-tile{
+  aspect-ratio:1;border:none;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-weight:700;color:var(--ink);box-shadow:var(--shadow-sm);font-size:1em;
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+  transition:filter .15s;position:relative;
+}
+.hunt-tile.c0{background:#ffe3dd}.hunt-tile.c1{background:#dfeafb}.hunt-tile.c2{background:#fff3c4}
+.hunt-tile.c3{background:#dff5e7}.hunt-tile.c4{background:#fde1ec}.hunt-tile.c5{background:#ede8fb}
+.hunt-tile.decor{background:transparent;box-shadow:none;cursor:default;font-size:1.1em}
+.hunt-tile:hover{filter:brightness(1.05)}
+.hunt-tile.found{background:var(--c-green);color:var(--paper);animation:pop .4s ease;pointer-events:none}
+.hunt-tile.found::after{content:"✓";position:absolute;top:-6px;right:-6px;background:var(--gold);color:#4a3712;border-radius:50%;width:22px;height:22px;font-size:.8rem;display:flex;align-items:center;justify-content:center;font-weight:900}
+
+/* ----- Character Garden 字的花園 ----- */
+.garden-top{
+  background:var(--card);border-radius:24px;box-shadow:var(--shadow-sm);padding:14px 16px;margin-bottom:12px;
+}
+.garden-stats{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;font-weight:800;color:var(--ink-soft);margin-bottom:10px}
+.garden-stats b{color:var(--ink);font-size:1.15rem}
+.garden-water:disabled{opacity:.5;cursor:default}
+.garden-hint{color:var(--ink-soft);font-weight:700;font-size:.95rem;margin-top:10px}
+.garden-bed{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;
+  background:linear-gradient(180deg,#e8f5dc,#cfe6b8);border-radius:26px;padding:16px 12px;box-shadow:var(--shadow);min-height:160px;
+}
+.plant{
+  border:none;border-radius:18px;background:rgba(255,253,248,.85);cursor:pointer;padding:8px 4px 6px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;box-shadow:var(--shadow-sm);
+  transition:transform .12s;
+}
+.plant:hover{transform:translateY(-3px)}
+.plant.wiggle{animation:buddyComfort 1s ease}
+.plant-emoji{font-size:2.2rem;line-height:1}
+.plant.stage-4 .plant-emoji{font-size:2.6rem}
+.plant-char{
+  font-size:1.6rem;font-weight:700;color:var(--ink);line-height:1.1;
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',var(--font-body);
+}
+.plant-en{font-size:.68rem;font-weight:700;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.plant-drop{position:absolute;top:-8px;right:-4px;font-size:1.1rem;animation:dropBob 1.4s ease-in-out infinite}
+@keyframes dropBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.plant.thirsty{outline:3px solid rgba(79,136,214,.55);outline-offset:1px}
+.garden-empty{grid-column:1 / -1;text-align:center;font-weight:800;color:var(--ink-soft);font-size:1.2rem;padding:24px 10px;line-height:1.5}
+.garden-empty small{font-weight:700;font-size:.9rem}
+.garden-legend{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-weight:700;color:var(--ink-soft);font-size:.85rem}
+@media (prefers-reduced-motion: reduce){.plant-drop,.pack-card.thirsty{animation:none}}
+@media(max-width:480px){
+  .write-title{font-size:1.25rem}
+  .mini-head .pill,.mini-progress{padding:6px 12px;font-size:.9rem}
 }

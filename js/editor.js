@@ -46,7 +46,8 @@ window.Editor = (function () {
   /* ---------- pack manager ---------- */
   function renderPackManager() {
     els.packManager.innerHTML = '';
-    Store.getPacks().forEach(p => {
+    // the auto-generated games have no editable questions — skip them here
+    Store.getPacks().filter(p => !p.generated).forEach(p => {
       const row = document.createElement('div');
       row.className = 'pm-row';
       const cnt = p.generated ? '自動出題' : (Store.questionsFor(p.id).length + ' 題');

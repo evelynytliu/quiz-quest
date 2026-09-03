@@ -6,33 +6,21 @@ window.Writer = (function () {
   const FIRST_STAR_COINS = 6;   // finishing a character the first time
   const REPEAT_COINS = 3;       // practising it again
 
-  // what each character means, so we can say it aloud and show a friendly hint
-  const META = {
-    '一': { en: 'one', pic: '1️⃣' },  '二': { en: 'two', pic: '2️⃣' },
-    '三': { en: 'three', pic: '3️⃣' }, '四': { en: 'four', pic: '4️⃣' },
-    '五': { en: 'five', pic: '5️⃣' },  '六': { en: 'six', pic: '6️⃣' },
-    '七': { en: 'seven', pic: '7️⃣' }, '八': { en: 'eight', pic: '8️⃣' },
-    '九': { en: 'nine', pic: '9️⃣' },  '十': { en: 'ten', pic: '🔟' },
-    '人': { en: 'person', pic: '🚶' }, '大': { en: 'big', pic: '🐘' },
-    '小': { en: 'small', pic: '🐭' },  '上': { en: 'up', pic: '⬆️' },
-    '下': { en: 'down', pic: '⬇️' },   '中': { en: 'middle', pic: '🎯' },
-    '日': { en: 'sun', pic: '☀️' },    '月': { en: 'moon', pic: '🌙' },
-    '山': { en: 'mountain', pic: '⛰️' }, '水': { en: 'water', pic: '💧' },
-    '火': { en: 'fire', pic: '🔥' },   '木': { en: 'tree', pic: '🌳' },
-    '土': { en: 'earth', pic: '🌱' },  '田': { en: 'field', pic: '🌾' },
-    '口': { en: 'mouth', pic: '👄' },  '手': { en: 'hand', pic: '✋' },
-    '心': { en: 'heart', pic: '❤️' },  '天': { en: 'sky', pic: '🌈' },
-    '王': { en: 'king', pic: '👑' },   '子': { en: 'child', pic: '👶' }
-  };
+  // what each character means (from the shared bank), so we can say it
+  // aloud and show a friendly hint
+  const META = new Proxy({}, { get: (_, ch) => window.ZH.word(ch) || { en: '', pic: '' } });
   const CHARS = Object.keys(window.ZH_STROKES || {});
   const INK = ['#e8472f', '#4f88d6', '#3aa86a', '#9a6bd0', '#e8850c'];
 
   // the adventure map: characters live on themed islands
   const ISLANDS = [
     { name: '數字島 Number Island',   emoji: '🔢', chars: ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'] },
-    { name: '自然島 Nature Island',   emoji: '🌋', chars: ['日', '月', '山', '水', '火', '木', '土', '田', '天'] },
-    { name: '小人島 People Island',   emoji: '🚶', chars: ['人', '大', '小', '上', '下', '中'] },
-    { name: '寶貝島 Treasure Island', emoji: '👑', chars: ['口', '手', '心', '王', '子'] }
+    { name: '自然島 Nature Island',   emoji: '🌋', chars: ['日', '月', '山', '水', '火', '木', '土', '田', '天', '雨', '花', '草', '白', '石'] },
+    { name: '小人島 People Island',   emoji: '🚶', chars: ['人', '大', '小', '上', '下', '中', '女', '子', '力', '生'] },
+    { name: '寶貝島 Treasure Island', emoji: '👑', chars: ['口', '手', '心', '王', '目', '耳', '門', '車'] },
+    { name: '動物島 Animal Island',   emoji: '🐾', chars: ['馬', '鳥', '牛', '羊', '魚', '蟲'] },
+    { name: '合體島 Combo Island',    emoji: '🧩', chars: ['明', '林', '炎', '朋', '好', '出', '休', '鳴', '男', '思', '問', '星', '媽'] },
+    { name: '三合一島 Triple Island', emoji: '✨', chars: ['森', '晶', '品', '旦', '尖', '李', '古', '聞', '泉', '岩', '仙', '里'] }
   ];
 
   let writer = null;       // the live hanzi-writer instance

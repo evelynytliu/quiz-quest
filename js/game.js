@@ -2,7 +2,6 @@
    results. Relies on window.showScreen (main.js), window.Sfx, window.Confetti. */
 window.Game = (function () {
   const SHAPES = ['▲', '◆', '●', '■'];
-  const CJK = /[㐀-鿿぀-ヿ가-힯]/;   // Chinese / kana / hangul characters
 
   let queue = [];
   let idx = 0;
@@ -41,15 +40,7 @@ window.Game = (function () {
     fbIcon: document.getElementById('feedback-icon'),
     fbText: document.getElementById('feedback-text'),
     fbPoints: document.getElementById('feedback-points'),
-    fbNext: document.getElementById('feedback-next'),
-    rStars: document.getElementById('result-stars'),
-    rTitle: document.getElementById('result-title'),
-    rLine: document.getElementById('result-line'),
-    rScore: document.getElementById('result-score'),
-    rBest: document.getElementById('result-best'),
-    rCoins: document.getElementById('result-coins'),
-    rBuddy: document.getElementById('result-buddy'),
-    rPrizes: document.getElementById('go-prizes')
+    fbNext: document.getElementById('feedback-next')
   };
 
   el.speakBtn.addEventListener('click', () => {
@@ -57,7 +48,9 @@ window.Game = (function () {
   });
 
   // Chinese-learning question types (answered by sound + pictures, no reading)
-  function isZhType(q) { return q && (q.type === 'zh' || q.type === 'zhpic'); }
+  //   zh:    hear a word, tap the character   zhpic: see a character, tap its picture
+  //   zhodd: spot the one character that's different (Spot the Twin)
+  function isZhType(q) { return q && (q.type === 'zh' || q.type === 'zhpic' || q.type === 'zhodd'); }
 
   /* ---------- karaoke: light up a sentence's characters one by one ----------
      While a sentence is being spoken, each character grows and glows in turn,
@@ -116,16 +109,17 @@ window.Game = (function () {
     clearSpeaking();
     if (isZhType(q)) {
       // character question: say the Chinese word (no English); a sentence on
-      // the big tile follows along character by character as it's spoken
-      if (q.packId === 'zh-sentences' && q.type === 'zhpic') {
+      // the big tile follows along character by character as it's spoken.
+      // q.say is a spoken prompt that must not give the answer away
+      // ("有幾隻貓？", "大，相反的是什麼？")
+      if (q.say) {
+        Sfx.speakZh(q.say);
+      } else if (q.packId === 'zh-sentences' && q.type === 'zhpic') {
         const [onState, onBoundary] = karaokeHooks(karaoke(el.qEmoji, q.zh));
         Sfx.speakZh(q.zh, onState, onBoundary);
       } else {
         Sfx.speakZh(q.zh || q.options[q.correct] || q.emoji);
       }
-    } else if (q.packId === 'chinese' && CJK.test(q.emoji || '')) {
-      // meaning question: say the character in Mandarin, then the English Q + options
-      Sfx.speakChineseMeaning(q.emoji, q.speak || q.text, q.options, setSpeaking);
     } else {
       Sfx.speakList(q.speak || q.text, q.options, setSpeaking);
     }
@@ -407,7 +401,8 @@ window.Game = (function () {
     const cjkLen = isCJK ? Array.from(q.emoji).length : 0;
     // 1 char: big square tile · 2 chars: wide tile · 3+ chars: sentence banner
     el.qEmoji.className = 'q-emoji' + (isCJK ? ' cjk-char' : '')
-      + (cjkLen > 1 ? ' cjk-word' : '') + (cjkLen > 2 ? ' cjk-sent' : '');
+      + (cjkLen > 1 ? ' cjk-word' : '') + (cjkLen > 2 ? ' cjk-sent' : '')
+      + (q.count ? ' count-tile' : '');
     if (q.math) {
       el.qEmoji.textContent = ['🚀', '🌟', '🧠', '🤖', '🎯', '🦖', '🍩', '⚡'][Math.floor(Math.random() * 8)];
       el.qText.innerHTML = renderMath(q.math, q.level);
@@ -434,6 +429,18 @@ window.Game = (function () {
         btn.className = 'answer-btn tf-btn ' + d.cls;
         btn.innerHTML = '<span class="tf-sym">' + d.sym + '</span>'
           + '<span class="tf-label">' + escapeHtml(d.label) + '</span>';
+        btn.addEventListener('click', () => answer(i, btn));
+        el.answers.appendChild(btn);
+      });
+    } else if (q.type === 'zhodd') {
+      // Spot the Twin: identical tiles, one look-alike — no 🔊 chips, the
+      // eyes have to do the work
+      el.answers.className = 'answer-grid odd-grid' + (q.options.length > 4 ? ' odd-grid-6' : '');
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn zh-opt odd-opt a' + (i % 7);
+        btn.innerHTML = '<span class="zh-opt-char"></span>';
+        btn.querySelector('.zh-opt-char').textContent = opt;
         btn.addEventListener('click', () => answer(i, btn));
         el.answers.appendChild(btn);
       });
@@ -487,7 +494,7 @@ window.Game = (function () {
     setListenState('idle', '');
     // 跟讀 echo button: Chinese questions only
     cancelEcho();
-    if (echoBtn) echoBtn.classList.toggle('hidden', !(isZhType(q) && echoSupported));
+    if (echoBtn) echoBtn.classList.toggle('hidden', !(isZhType(q) && q.type !== 'zhodd' && echoSupported));
 
     // auto-read the question aloud (Chinese-aware), kids decode by sound
     setTimeout(readCurrent, 300);
@@ -585,6 +592,9 @@ window.Game = (function () {
       else b.classList.add('dimmed');
     });
 
+    // the Garden remembers every character met, right or wrong
+    if (isZhType(q) && q.zh) Store.noteChars(q.zh, right);
+
     let gained = 0;
     if (right) {
       const factor = Math.max(0, 1 - (used / limit) * 0.5); // speed bonus, min ~half
@@ -624,6 +634,7 @@ window.Game = (function () {
       if (i === q.correct) b.classList.add('right'); else b.classList.add('dimmed');
     });
     streak = 0;
+    if (isZhType(q) && q.zh) Store.noteChars(q.zh, false);
     Sfx.wrong();
     showFeedback(null, 0, q.options[q.correct]);
   }
@@ -657,10 +668,13 @@ window.Game = (function () {
     // English meaning ("魚 ... fish!") — q.zh is the character even when the
     // tapped answer was a picture. Whole sentences stay Mandarin-only: the
     // English translation is long, gets cut off, and doesn't help here.
-    const zhWord = isZh ? (cq.zh || correctText) : '';
+    // q.after overrides what's said afterwards (opposites say both words:
+    // "大、小 … big and small")
+    const zhWord = isZh ? (cq.after ? cq.after.zh : (cq.zh || correctText)) : '';
+    const enWord = cq.after ? cq.after.en : cq.en;
     const isSentence = cq.packId === 'zh-sentences';
     const sayAnswer = () => {
-      if (!isSentence) { Sfx.speakZhEn(zhWord, cq.en); return; }
+      if (!isSentence) { Sfx.speakZhEn(zhWord, enWord); return; }
       // follow the spoken sentence character by character: on the big tile
       // (picture questions) or on the correct answer button (sentence options)
       const target = cq.type === 'zhpic'
@@ -683,7 +697,8 @@ window.Game = (function () {
       el.fbText.textContent = right === false
         ? TRYAGAIN[Math.floor(Math.random() * TRYAGAIN.length)]
         : "Time's up!";
-      el.fbPoints.innerHTML = 'The answer is: <span class="ans">' + escapeHtml(correctText) + '</span>';
+      el.fbPoints.innerHTML = 'The answer is: <span class="ans">' + escapeHtml(correctText)
+        + (cq.picHint ? ' ' + cq.picHint : '') + '</span>';
       el.fbNext.textContent = 'Got it ▶';
       // wrong / timed out — read the answer aloud (in Mandarin for Chinese qs)
       if (isZh) setTimeout(sayAnswer, 450);
@@ -699,58 +714,7 @@ window.Game = (function () {
 
   function finish() {
     el.feedback.classList.add('hidden');
-    const total = queue.length;
-    const ratio = correctCount / total;
-    let stars = 1;
-    if (ratio >= 0.9) stars = 3; else if (ratio >= 0.6) stars = 2;
-    el.rStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-
-    const titles = stars === 3 ? ['Quiz Champion! 🏆', 'Incredible! 🤩', 'Perfect Brain! 🧠']
-      : stars === 2 ? ['Great job! 🎉', 'Well done! 👏', 'So good! 🌟']
-      : ['Good try! 💪', 'Keep practising! 🚀', 'Nice effort! 😊'];
-    el.rTitle.textContent = titles[Math.floor(Math.random() * titles.length)];
-    const who = Store.getCurrentPlayer();
-    el.rLine.textContent = `${who ? who + ', you' : 'You'} got ${correctCount} / ${total} right` + (bestStreak >= 3 ? `  •  best streak 🔥${bestStreak}` : '');
-    el.rScore.textContent = score;
-
-    const isBest = Store.setBest(packId, score);
-    const best = Store.getBest(packId);
-    el.rBest.textContent = isBest ? '🏅 New high score!' : (best ? 'High score: ' + best : '');
-
-    // prize-machine coins: one per correct answer, plus a star bonus.
-    // Chinese packs pay double — a little nudge towards learning characters.
-    const zhBonus = packId === 'chinese' || packId === 'zh-quest'
-      || packId === 'zh-words' || packId === 'zh-sentences';
-    let coinsEarned = correctCount + (stars === 3 ? 5 : stars === 2 ? 2 : 0);
-    if (zhBonus) coinsEarned *= 2;
-    if (coinsEarned) { Store.addCoins(coinsEarned); Sfx.coin(); }
-    el.rCoins.textContent = coinsEarned
-      ? '💰 +' + coinsEarned + ' coins earned!' + (zhBonus ? ' 🀄 ×2 bonus!' : '')
-      : '';
-
-    // daily quests + the parent's learning log
-    Store.logRound(packId, correctCount, total);
-    const questsDone = []
-      .concat(zhBonus ? Store.bumpQuest('zhround', 1) : [])
-      .concat(Store.bumpQuest('correct', correctCount));
-    const rQuests = document.getElementById('result-quests');
-    if (rQuests) {
-      rQuests.innerHTML = questsDone
-        .map(q => '🎯 Daily quest done! ' + q.icon + ' +💰' + q.reward)
-        .join('<br>');
-      rQuests.classList.toggle('hidden', !questsDone.length);
-      if (questsDone.length) { Sfx.coin(); Confetti.emojiBurst(['🎯', '⭐'], 10); }
-    }
-    if (el.rPrizes) el.rPrizes.textContent = '🎁 Prizes · 💰' + Store.getCoins();
-
-    const buddy = Store.getBuddy();
-    el.rBuddy.textContent = buddy;
-    el.rBuddy.classList.toggle('hidden', !buddy);
-
-    showScreen('results');
-    Sfx.fanfare();
-    if (stars >= 2) { Confetti.rain(120); setTimeout(() => Confetti.rain(80), 600); }
-    if (stars === 3) Confetti.emojiBurst(['⭐', '🌟'], 16);
+    Results.show({ packId, correct: correctCount, total: queue.length, score, bestStreak });
   }
 
   function escapeHtml(s) {
