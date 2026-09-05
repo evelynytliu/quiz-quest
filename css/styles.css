@@ -358,22 +358,25 @@ body{
 .answer-btn{
   border:none;border-radius:var(--radius);cursor:pointer;font-family:var(--font-body);
   color:var(--paper);font-weight:800;font-size:clamp(1.1rem,3vw,1.45rem);letter-spacing:.2px;
-  padding:20px 16px;display:flex;align-items:center;gap:14px;text-align:left;
+  padding:20px 0 20px 16px;display:flex;align-items:stretch;gap:12px;text-align:left;
   box-shadow:var(--shadow-sm);transition:transform .1s, filter .15s, opacity .15s, box-shadow .15s;min-height:84px;
   position:relative;overflow:hidden;
 }
 .answer-btn::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.09),transparent 50%);pointer-events:none}
 .answer-btn:hover{filter:brightness(1.05);box-shadow:var(--shadow)}
 .answer-btn:active{transform:translateY(2px)}
-.answer-btn .shape{font-size:1.5rem;flex:0 0 auto;opacity:.85}
-.answer-btn .label{flex:1}
+.answer-btn .shape{font-size:1.5rem;flex:0 0 auto;opacity:.85;align-self:center}
+.answer-btn .label{flex:1;align-self:center}
+/* the "hear it" zone: a whole strip down the right side of the button,
+   tall as the button and wide enough for a small finger to hit every time */
 .opt-speak{
-  flex:0 0 auto;width:46px;height:46px;border-radius:50%;background:rgba(243,236,222,.22);
-  display:flex;align-items:center;justify-content:center;font-size:1.25rem;cursor:pointer;
-  transition:background .12s, transform .08s;
+  flex:0 0 auto;align-self:stretch;width:clamp(74px,19vw,100px);margin:-20px 0 -20px 4px;
+  border-left:3px dashed rgba(255,255,255,.55);background:rgba(255,255,255,.22);
+  display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;
+  transition:background .12s, transform .08s;position:relative;z-index:1;
 }
-.opt-speak:hover{background:rgba(243,236,222,.4)}
-.opt-speak:active{transform:scale(.9)}
+.opt-speak:hover{background:rgba(255,255,255,.38)}
+.opt-speak:active{background:rgba(255,255,255,.5);transform:scale(.94)}
 .answer-btn.a0{background:var(--c-red)}
 .answer-btn.a1{background:var(--c-blue)}
 .answer-btn.a2{background:var(--c-yellow)}
@@ -383,10 +386,11 @@ body{
 .answer-btn.a6{background:var(--c-salmon)}
 /* dark ink text on the lighter accents keeps options easy to read */
 .answer-btn.a2,.answer-btn.a4,.answer-btn.a5,.answer-btn.a6{color:var(--ink)}
-.answer-btn.a2 .opt-speak,.answer-btn.a4 .opt-speak,.answer-btn.a5 .opt-speak,.answer-btn.a6 .opt-speak{background:rgba(54,50,44,.14)}
+.answer-btn.a2 .opt-speak,.answer-btn.a4 .opt-speak,.answer-btn.a5 .opt-speak,.answer-btn.a6 .opt-speak{background:rgba(54,50,44,.12);border-left-color:rgba(54,50,44,.35)}
 
 /* big Chinese character answer tiles (listening questions) */
-.answer-btn.zh-opt{justify-content:center;align-items:center;min-height:104px}
+.answer-btn.zh-opt{justify-content:center;align-items:stretch;min-height:104px}
+.answer-btn.zh-opt .zh-opt-char{align-self:center}
 .zh-opt-char{
   flex:1;text-align:center;line-height:1;font-weight:700;
   font-size:clamp(2.8rem,11vw,4.2rem);
