@@ -449,10 +449,13 @@ window.Store = (function () {
       opts[correct] = odd;
       return {
         id: uid(), packId: 'zh-twins', type: 'zhodd',
-        emoji: '🔍', zh: odd, en: oddEn,
+        emoji: '🔍', zh: odd, en: oddEn, base, baseEn,
         text: 'Tap the one that is different! 找出不一樣的字',
         say: '哪一個不一樣？',
         after: { zh: base + '，' + odd, en: baseEn + ' … ' + oddEn },
+        // spoken after answering: the common character with its meaning,
+        // then the odd one out with its meaning, each lit up as it is said
+        seq: [{ zh: base, en: baseEn }, { zh: odd, en: oddEn }],
         options: opts, correct, time: 30, level
       };
     });

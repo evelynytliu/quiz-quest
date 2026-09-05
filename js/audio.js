@@ -172,6 +172,24 @@ window.Sfx = (function () {
     if (enText) speechSynthesis.speak(utter(String(enText), 0.85));
   }
 
+  // Say several Chinese words in turn, each followed by its English meaning
+  // ("木 … tree … 本 … root"). onItem(index, isSpeaking) fires when each
+  // word starts and when its meaning has finished, so the caller can light up
+  // what is being said. A silent beat between items keeps the pairs apart.
+  function speakSeq(items, onItem) {
+    if (!('speechSynthesis' in window) || muted) return;
+    speechSynthesis.cancel();
+    (items || []).forEach((it, i) => {
+      const u = utterZh(it.zh, 0.7);
+      u.onstart = () => { if (typeof onItem === 'function') onItem(i, true); };
+      const last = it.en ? utter(String(it.en), 0.85) : u;
+      last.onend = () => { if (typeof onItem === 'function') onItem(i, false); };
+      speechSynthesis.speak(u);
+      if (it.en) speechSynthesis.speak(last);
+      if (i < items.length - 1) { const gap = utter('.', 0.6); gap.volume = 0; speechSynthesis.speak(gap); }
+    });
+  }
+
   // Read the question, then each answer option in order (with a tiny lead-in).
   // onOption(index, isSpeaking) fires as each option is read, so the caller can
   // gently enlarge the matching button while the voice is on it.
@@ -201,6 +219,6 @@ window.Sfx = (function () {
   function zhVoiceInfo() { return zhVoice ? zhVoice.name + ' [' + zhVoice.lang + ']' : ''; }
 
   return { correct, wrong, tick, beep, go, fanfare, tap, coin, pop, speak, speakList,
-    speakZh, speakZhEn, zhAvailable, zhVoiceInfo, zhPace,
+    speakZh, speakZhEn, speakSeq, zhAvailable, zhVoiceInfo, zhPace,
     stopSpeak, resume, setMuted };
 })();

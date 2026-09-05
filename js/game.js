@@ -433,15 +433,22 @@ window.Game = (function () {
         el.answers.appendChild(btn);
       });
     } else if (q.type === 'zhodd') {
-      // Spot the Twin: identical tiles, one look-alike — no 🔊 chips, the
-      // eyes have to do the work
+      // Spot the Twin: identical tiles, one look-alike — no 🔊 chips before
+      // answering (the sound would give it away), the eyes have to do the
+      // work. Once answered, every tile speaks its own character when tapped.
       el.answers.className = 'answer-grid odd-grid' + (q.options.length > 4 ? ' odd-grid-6' : '');
       q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'answer-btn zh-opt odd-opt a' + (i % 7);
         btn.innerHTML = '<span class="zh-opt-char"></span>';
         btn.querySelector('.zh-opt-char').textContent = opt;
-        btn.addEventListener('click', () => answer(i, btn));
+        btn.addEventListener('click', () => {
+          if (!locked) { answer(i, btn); return; }
+          // reviewing after the answer: say this tile's character and meaning
+          Sfx.stopSpeak();
+          [...el.answers.children].forEach(b => b.classList.remove('speaking'));
+          Sfx.speakZhEn(opt, opt === q.zh ? q.en : q.baseEn, on => setSpeaking(i, on));
+        });
         el.answers.appendChild(btn);
       });
     } else if (isZhType(q)) {
@@ -583,14 +590,17 @@ window.Game = (function () {
     const used = timerUsedSeconds();   // excludes time spent talking/listening
     const limit = q.time || 30;
 
-    // disable buttons & reveal
+    // disable buttons & reveal (twin tiles stay tappable so each one can
+    // be heard while reviewing)
     [...el.answers.children].forEach((b, i) => {
-      b.style.pointerEvents = 'none';
+      if (q.type !== 'zhodd') b.style.pointerEvents = 'none';
       b.classList.remove('speaking');
       if (i === q.correct) b.classList.add('right');
       else if (i === choice) b.classList.add('wrong');
       else b.classList.add('dimmed');
     });
+    // Spot the Twin: the first thing they hear is the character they tapped
+    if (q.type === 'zhodd') Sfx.speakZh(q.options[choice]);
 
     // the Garden remembers every character met, right or wrong
     if (isZhType(q) && q.zh) Store.noteChars(q.zh, right);
@@ -629,7 +639,7 @@ window.Game = (function () {
     setListenState('idle', '');
     const q = queue[idx];
     [...el.answers.children].forEach((b, i) => {
-      b.style.pointerEvents = 'none';
+      if (q.type !== 'zhodd') b.style.pointerEvents = 'none';
       b.classList.remove('speaking');
       if (i === q.correct) b.classList.add('right'); else b.classList.add('dimmed');
     });
@@ -674,6 +684,17 @@ window.Game = (function () {
     const enWord = cq.after ? cq.after.en : cq.en;
     const isSentence = cq.packId === 'zh-sentences';
     const sayAnswer = () => {
+      if (cq.seq) {
+        // "木 … tree" with every 木 tile glowing, then "本 … root" on the odd one
+        const tiles = [...el.answers.children];
+        Sfx.speakSeq(cq.seq, (i, on) => {
+          tiles.forEach((b, k) => {
+            const isOdd = cq.options[k] === cq.zh;
+            if ((i === 0 && !isOdd) || (i === 1 && isOdd)) b.classList.toggle('speaking', on);
+          });
+        });
+        return;
+      }
       if (!isSentence) { Sfx.speakZhEn(zhWord, enWord); return; }
       // follow the spoken sentence character by character: on the big tile
       // (picture questions) or on the correct answer button (sentence options)
@@ -686,22 +707,25 @@ window.Game = (function () {
     if (right === true) {
       el.fbIcon.textContent = ['🎉', '🌟', '🚀', '💪', '🏆'][Math.floor(Math.random() * 5)];
       el.fbText.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
-      el.fbPoints.textContent = '+' + gained + (streak >= 2 ? '   🔥' + streak : '');
+      el.fbPoints.textContent = '+' + gained + (streak >= 2 ? '   🔥' + streak : '')
+        + (cq.seq ? '   ' + cq.base + ' ' + cq.baseEn + ' · ' + cq.zh + ' ' + cq.en : '');
       el.fbNext.textContent = 'Next ▶';
-      if (isZh) setTimeout(sayAnswer, 350);
+      // (twins wait for the tapped character to finish before teaching both)
+      if (isZh) setTimeout(sayAnswer, cq.seq ? 1100 : 350);
       // got it right — keep the pace, but Next can skip ahead
-      // (sentences get a touch longer so the whole line is heard)
-      advanceTimer = setTimeout(next, isSentence ? 3300 : isZh ? 2600 : 1700);
+      // (sentences and twins get longer so the whole thing is heard)
+      advanceTimer = setTimeout(next, cq.seq ? 5200 : isSentence ? 3300 : isZh ? 2600 : 1700);
     } else {
       el.fbIcon.textContent = right === false ? '🙈' : '⏰';
       el.fbText.textContent = right === false
         ? TRYAGAIN[Math.floor(Math.random() * TRYAGAIN.length)]
         : "Time's up!";
       el.fbPoints.innerHTML = 'The answer is: <span class="ans">' + escapeHtml(correctText)
-        + (cq.picHint ? ' ' + cq.picHint : '') + '</span>';
+        + (cq.picHint ? ' ' + cq.picHint : '') + '</span>'
+        + (cq.seq ? ' ' + escapeHtml(cq.en) + ' · the others are <span class="ans">' + escapeHtml(cq.base) + '</span> ' + escapeHtml(cq.baseEn) : '');
       el.fbNext.textContent = 'Got it ▶';
       // wrong / timed out — read the answer aloud (in Mandarin for Chinese qs)
-      if (isZh) setTimeout(sayAnswer, 450);
+      if (isZh) setTimeout(sayAnswer, cq.seq ? 1100 : 450);
       else setTimeout(() => Sfx.speak('The answer is ' + correctText), 450);
     }
   }
